@@ -1,18 +1,11 @@
-/qr.jpg
-
-.idea
-
-anychatcmd
-
-*o
+# Compiled Object files, Static and Dynamic libs (Shared Objects)
+*.o
 *.a
 *.so
-*.py
+
 # Folders
 _obj
 _test
-
-log.txt
 
 # Architecture specific extensions/prefixes
 *.[568vq]
@@ -26,7 +19,4 @@ _cgo_export.*
 
 _testmain.go
 
-*.test
-*.prof
-Status API Training Shop Blog About
-© 2016 GitHub, Inc. Terms Privacy Security Contact Help
+*.exe
