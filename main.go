@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/daviddengcn/go-colortext"
 	"github.com/hawklithm/anychatcmd/ui"
@@ -97,38 +98,53 @@ func main() {
 		return
 	}
 
-	nickNameList := []string{}
-	userIDList := []string{}
+	var recentUserList []ui.UserInfo
+	var recentGroupList []ui.Group
+	var userInfos []ui.UserInfo
+	var groupInfos []ui.Group
 
 	for _, member := range wechat.InitContactList {
-		nickNameList = append(nickNameList, member.NickName)
-		userIDList = append(userIDList, member.UserName)
-
-	}
-
-	for _, member := range wechat.ContactList {
-		nickNameList = append(nickNameList, member.NickName)
-		userIDList = append(userIDList, member.UserName)
-	}
-
-	for _, member := range wechat.PublicUserList {
-		nickNameList = append(nickNameList, member.NickName)
-		userIDList = append(userIDList, member.UserName)
-
-	}
-	groupIdList := []string{}
-	for _, user := range userIDList {
-		if strings.HasPrefix(user, "@@") {
-			groupIdList = append(groupIdList, user)
+		if strings.HasPrefix(member.UserName, "@@") {
+			recentGroupList = append(recentGroupList, ui.Group{GroupId: member.
+				UserName, Name: member.NickName,
+				LastChatTime: time.Now()})
+		} else {
+			recentUserList = append(recentUserList, ui.UserInfo{UserId: member.
+				UserName, Nick: member.NickName, DisplayName: member.RemarkName,
+				LastChatTime: time.Now()})
 		}
 	}
 
-	//群成员列表
-	groupMemberList, err := wechat.GetContactsInBatch(groupIdList)
-	if err != nil {
-		logger.Fatal("get batch contact error=", err)
-		return
+	for _, member := range wechat.ContactList {
+		if strings.HasPrefix(member.UserName, "@@") {
+			groupInfos = append(groupInfos, ui.Group{GroupId: member.
+				UserName, Name: member.NickName,
+				LastChatTime: time.Now()})
+		} else {
+			userInfos = append(userInfos, ui.UserInfo{UserId: member.
+				UserName, Nick: member.NickName, DisplayName: member.RemarkName,
+				LastChatTime: time.Now()})
+		}
 	}
+
+	for _, member := range wechat.PublicUserList {
+		userInfos = append(userInfos, ui.UserInfo{UserId: member.
+			UserName, Nick: member.NickName, DisplayName: member.RemarkName,
+			LastChatTime: time.Now()})
+	}
+	//groupIdList := []string{}
+	//for _, user := range userIDList {
+	//	if strings.HasPrefix(user, "@@") {
+	//		groupIdList = append(groupIdList, user)
+	//	}
+	//}
+
+	////群成员列表
+	//groupMemberList, err := wechat.GetContactsInBatch(groupIdList)
+	//if err != nil {
+	//	logger.Fatal("get batch contact error=", err)
+	//	return
+	//}
 
 	msgIn := make(chan chat.Message, maxChanSize)
 	msgOut := make(chan chat.MessageOut, maxChanSize)
@@ -139,7 +155,8 @@ func main() {
 	go wechat.SyncDaemon(msgIn, imageIn)
 
 	go wechat.MsgDaemon(msgOut, autoChan)
-	ui.NewLayout(nickNameList, userIDList, groupMemberList,
+	ui.NewLayout(recentUserList, recentGroupList, userInfos, groupInfos,
+		nil,
 		wechat.User.NickName,
 		wechat.User.UserName, msgIn, msgOut, imageIn, closeChan, autoChan,
 		wxLogger)

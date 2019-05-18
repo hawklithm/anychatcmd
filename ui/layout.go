@@ -13,9 +13,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hawklithm/anychatcmd/wechat"
 	ui "github.com/hawklithm/termui"
 	"github.com/hawklithm/termui/widgets"
-	"github.com/hawklithm/anychatcmd/wechat"
 )
 
 const (
@@ -28,7 +28,6 @@ type Layout struct {
 	chatBox         *widgets.ImageList //聊天窗口
 	msgInBox        *widgets.Paragraph //消息窗口
 	editBox         *widgets.Paragraph // 输入框
-	userNickListBox *widgets.List
 	userIDList      []string
 	curUserIndex    int
 	masterName      string // 主人的名字
@@ -58,8 +57,10 @@ type Layout struct {
 	selectedMsgId   string
 }
 
-func NewLayout(userNickList []string, userIDList []string,
-	groupMemberList []wechat.Member, myName, myID string,
+func NewLayout(
+	recentUserList []UserInfo, recentGroupList []Group, userList []UserInfo,
+	groupList []Group, userChangeEvent chan UserChangeEvent,
+	myName, myID string,
 	msgIn chan wechat.Message, msgOut chan wechat.MessageOut,
 	imageIn chan wechat.MessageImage,
 	closeChan, autoReply chan int, logger *log.Logger) {
@@ -72,46 +73,21 @@ func NewLayout(userNickList []string, userIDList []string,
 	defer ui.Close()
 
 	//用户列表框
-	userMap := make(map[string]string)
 	userChatLog := make(map[string][]*wechat.MessageRecord)
 	groupMemberMap := make(map[string]map[string]string)
 	imageMap := make(map[string]image.Image)
 
-	size := len(userNickList)
-
-	for i := 0; i < size; i++ {
-		userMap[userIDList[i]] = userNickList[i]
-	}
-	userMap[myID] = myName
-
-	for _, m := range groupMemberList {
-		if groupMemberMap[m.UserName] == nil {
-			groupMemberMap[m.UserName] = make(map[string]string)
-		}
-		for _, user := range m.MemberList {
-			groupMemberMap[m.UserName][user.UserName] = user.NickName
-		}
-	}
-
-	userNickListBox := widgets.NewList()
-	userNickListBox.Title = "用户列表"
-	//userNickListBox.BorderStyle = ui.NewStyle(ui.ColorMagenta)
-	//userNickListBox.Border = true
-	userNickListBox.TextStyle = ui.NewStyle(ui.ColorYellow)
-	userNickListBox.WrapText = false
-	userNickListBox.SelectedRowStyle = ui.NewStyle(ui.ColorWhite, ui.ColorRed)
-
 	width, height := ui.TerminalDimensions()
 
-	userNickListBox.SetRect(0, 0, width*2/10, height)
-
-	userNickListBox.Rows = userNickList
+	userListWidget := NewUserList(recentUserList, recentGroupList, userList,
+		groupList, userChangeEvent, width*2/10, height, 0, 0, logger)
+	userListWidget.Pick()
 
 	chatBox := widgets.NewImageList()
 	chatBox.SetRect(width*2/10, 0, width*6/10, height*8/10)
 
 	chatBox.TextStyle = ui.NewStyle(ui.ColorRed)
-	chatBox.Title = "to:" + userNickList[0]
+	//chatBox.Title = "to:" + userNickList[0]
 	chatBox.BorderStyle = ui.NewStyle(ui.ColorMagenta)
 
 	msgInBox := widgets.NewParagraph()
@@ -129,17 +105,14 @@ func NewLayout(userNickList []string, userIDList []string,
 	editBox.Title = "输入框"
 	editBox.BorderStyle = ui.NewStyle(ui.ColorCyan)
 
-	pageCount := len(userNickList) / PageSize
-	if len(userNickList)%PageSize != 0 {
-		pageCount++
-	}
+	//pageCount := len(userNickList) / PageSize
+	//if len(userNickList)%PageSize != 0 {
+	//	pageCount++
+	//}
 	l := &Layout{
-		showUserList:    userNickList,
 		userCur:         0,
 		curPage:         0,
 		msgInBox:        msgInBox,
-		userNickListBox: userNickListBox,
-		userIDList:      userIDList,
 		chatBox:         chatBox,
 		editBox:         editBox,
 		msgIn:           msgIn,
@@ -148,11 +121,8 @@ func NewLayout(userNickList []string, userIDList []string,
 		closeChan:       closeChan,
 		currentMsgCount: 0,
 		maxMsgCount:     18,
-		userCount:       len(userNickList),
-		pageCount:       pageCount,
 		pageSize:        PageSize,
 		curUserIndex:    0,
-		userMap:         userMap,
 		masterID:        myID,
 		masterName:      myName,
 		logger:          logger,
@@ -166,7 +136,7 @@ func NewLayout(userNickList []string, userIDList []string,
 	go l.displayMsgIn()
 
 	// 注册各个组件
-	ui.Render(l.msgInBox, l.chatBox, l.editBox, l.userNickListBox)
+	ui.Render(l.msgInBox, l.chatBox, l.editBox)
 
 	uiEvents := ui.PollEvents()
 	for {
@@ -184,10 +154,6 @@ func NewLayout(userNickList []string, userIDList []string,
 			resetPar(l.editBox)
 		case "<C-w>":
 			l.showDetail()
-		case "<C-n>":
-			l.NextUser()
-		case "<C-p>":
-			l.PrevUser()
 		case "<C-j>":
 			l.NextSelect()
 		case "<C-k>":
@@ -310,17 +276,6 @@ func (l *Layout) displayMsgIn() {
 
 	}
 	return
-}
-
-func (l *Layout) PrevUser() {
-	l.userNickListBox.ScrollUp()
-	l.userCur = l.userNickListBox.SelectedRow
-	l.chatBox.Title = l.userNickListBox.Rows[l.userNickListBox.SelectedRow]
-	//l.logger.Println("title=", l.chatBox.Title, "content=",
-	//	l.userChatLog[l.userIDList[l.userNickListBox.SelectedRow]])
-	setRows(l.chatBox, l.userChatLog[l.userIDList[l.userNickListBox.SelectedRow]])
-	//l.logger.Println("prev user", "rows=", len(l.chatBox.Rows))
-	ui.Render(l.userNickListBox, l.chatBox)
 }
 
 func setRows(p *widgets.ImageList, records []*wechat.MessageRecord) {
@@ -453,18 +408,6 @@ func (l *Layout) showDetail() {
 func (l *Layout) NextSelect() {
 	l.chatBox.ScrollDown()
 	ui.Render(l.chatBox)
-}
-
-func (l *Layout) NextUser() {
-	l.userNickListBox.ScrollDown()
-	l.userCur = l.userNickListBox.SelectedRow
-	l.chatBox.Title = l.userNickListBox.Rows[l.userNickListBox.SelectedRow]
-	//l.logger.Println("title=", l.chatBox.Title, "content=",
-	//	l.userChatLog[l.userIDList[l.userNickListBox.SelectedRow]])
-	setRows(l.chatBox, l.userChatLog[l.userIDList[l.userNickListBox.SelectedRow]])
-	//l.logger.Println("next user", "rows=", len(l.chatBox.Rows), "top row=",
-	//	l.chatBox.TopLine())
-	ui.Render(l.userNickListBox, l.chatBox)
 }
 
 func (l *Layout) SendText(text string) {

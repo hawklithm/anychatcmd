@@ -101,7 +101,7 @@ func (this *UserList) Reset() {
 
 	this.userNickListBox.SetRect(this.baseX, this.baseY+2,
 		this.baseX+this.width,
-		this.baseY+4+this.height)
+		this.baseY+this.height)
 
 	groupNickListBox := widgets.NewList()
 	//userNickListBox.Title = "用户列表"
@@ -112,22 +112,19 @@ func (this *UserList) Reset() {
 	groupNickListBox.SelectedRowStyle = ui.NewStyle(ui.ColorWhite, ui.ColorRed)
 
 	groupNickListBox.SetRect(this.baseX, this.baseY+2, this.baseX+this.width,
-		this.baseY+4+this.height)
-
-	this.userNickListBox = widgets.NewList()
-	//userNickListBox.Title = "用户列表"
-	//userNickListBox.BorderStyle = ui.NewStyle(ui.ColorMagenta)
-	//userNickListBox.Border = true
-	this.userNickListBox.TextStyle = ui.NewStyle(ui.ColorYellow)
-	this.userNickListBox.WrapText = false
-	this.userNickListBox.SelectedRowStyle = ui.NewStyle(ui.ColorWhite,
-		ui.ColorRed)
-
-	this.userNickListBox.SetRect(this.baseX, this.baseY+2,
-		this.baseX+this.width,
-		this.baseY+4+this.height)
+		this.baseY+this.height)
 
 	this.groupNickListBox = groupNickListBox
+
+	this.recentListBox = widgets.NewList()
+	this.recentListBox.TextStyle = ui.NewStyle(ui.ColorYellow)
+	this.recentListBox.WrapText = false
+	this.recentListBox.SelectedRowStyle = ui.NewStyle(ui.ColorWhite,
+		ui.ColorRed)
+
+	this.recentListBox.SetRect(this.baseX, this.baseY+2,
+		this.baseX+this.width,
+		this.baseY+this.height)
 
 	nickList := make([]string, len(this.userList))
 	groupList := make([]string, len(this.groupList))
@@ -140,23 +137,27 @@ func (this *UserList) Reset() {
 		}
 	}
 	this.userNickListBox.Rows = nickList
-	this.logger.Println("nickList=", nickList)
 
 	for i, group := range this.groupList {
 		groupList[i] = group.Name
 	}
 	this.groupNickListBox.Rows = groupList
-	this.logger.Println("groupList=", groupList)
 
-	//recentList := merge(this.recentUserList, this.recentGroupList)
+	recentList := merge(this.recentUserList, this.recentGroupList)
+	recentNickList := make([]string, recentList.Len())
+	for i, r := range *recentList {
+		recentNickList[i] = r.Nick
+	}
+	this.recentListBox.Rows = recentNickList
 
-	this.tabPane = widgets.NewTabPane("好友列表", "群列表")
+	this.tabPane = widgets.NewTabPane("聊天列表", "好友列表", "群列表")
 	this.tabPane.SetRect(this.baseX, this.baseY, this.baseX+this.width,
 		this.baseY+3)
 	this.tabPane.Border = true
-	tabWidgets := make([]*widgets.List, 2)
-	tabWidgets[0] = this.userNickListBox
-	tabWidgets[1] = this.groupNickListBox
+	tabWidgets := make([]*widgets.List, 3)
+	tabWidgets[0] = this.recentListBox
+	tabWidgets[1] = this.userNickListBox
+	tabWidgets[2] = this.groupNickListBox
 	this.tabWidgets = tabWidgets
 
 	this.currentTab = this.userNickListBox
