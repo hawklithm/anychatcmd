@@ -19,14 +19,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:c3720516d4e8b874faaae76679b073f0daa4ff670cb00c189c276d510805e372"
+  digest = "1:f0401fdedb6bee46ae453bc41832bb6cda73ff1daae364c4c2ea2c15ec94b6f0"
   name = "github.com/hawklithm/termui"
   packages = [
     ".",
     "widgets",
   ]
   pruneopts = "UT"
-  revision = "07d4a7b528328471d20c82ca8134253de804aaf7"
+  revision = "397b03b2ecbc487f748b01b1576bdf8272bf211c"
 
 [[projects]]
   digest = "1:0356f3312c9bd1cbeda81505b7fd437501d8e778ab66998ef69f00d7f9b3a0d7"
