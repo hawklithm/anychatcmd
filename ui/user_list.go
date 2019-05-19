@@ -74,12 +74,22 @@ func (p SortItems) Less(i, j int) bool {
 
 func merge(userInfo []UserInfo, groupInfo []Group) *SortItems {
 	z := make(SortItems, len(userInfo)+len(groupInfo))
-	for i, user := range userInfo {
-		z[i] = SortItem{
+	var count = 0
+	for _, user := range userInfo {
+		z[count] = SortItem{
 			Nick:         utils.If(user.DisplayName != "", user.DisplayName, user.Nick).(string),
 			Id:           user.UserId,
 			LastChatTime: user.LastChatTime,
 		}
+		count++
+	}
+	for _, group := range groupInfo {
+		z[count] = SortItem{
+			Nick:         group.Name,
+			Id:           group.GroupId,
+			LastChatTime: group.LastChatTime,
+		}
+		count++
 	}
 	return &z
 }
@@ -160,7 +170,7 @@ func (this *UserList) Reset() {
 	tabWidgets[2] = this.groupNickListBox
 	this.tabWidgets = tabWidgets
 
-	this.currentTab = this.userNickListBox
+	this.currentTab = this.recentListBox
 
 	ui.Render(this.tabPane, this.currentTab)
 }

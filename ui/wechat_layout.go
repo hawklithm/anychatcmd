@@ -57,6 +57,12 @@ type Layout struct {
 	selectedMsgId   string
 }
 
+type WidgetPicker interface {
+	Pick()
+	Unpick()
+	Action(e ui.Event) bool
+}
+
 func NewLayout(
 	recentUserList []UserInfo, recentGroupList []Group, userList []UserInfo,
 	groupList []Group, userChangeEvent chan UserChangeEvent,
@@ -79,9 +85,13 @@ func NewLayout(
 
 	width, height := ui.TerminalDimensions()
 
+	var pickerList []WidgetPicker
+
 	userListWidget := NewUserList(recentUserList, recentGroupList, userList,
 		groupList, userChangeEvent, width*2/10, height, 0, 0, logger)
 	userListWidget.Pick()
+
+	pickerList = append(pickerList, userListWidget)
 
 	chatBox := widgets.NewImageList()
 	chatBox.SetRect(width*2/10, 0, width*6/10, height*8/10)
@@ -141,6 +151,16 @@ func NewLayout(
 	uiEvents := ui.PollEvents()
 	for {
 		e := <-uiEvents
+		catched := false
+		for _, picker := range pickerList {
+			if picker.Action(e) {
+				catched = true
+				break
+			}
+		}
+		if catched {
+			continue
+		}
 		switch e.ID {
 		case "<C-c>", "<C-d>":
 			return

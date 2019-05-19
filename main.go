@@ -116,20 +116,20 @@ func main() {
 	}
 
 	for _, member := range wechat.ContactList {
-		if strings.HasPrefix(member.UserName, "@@") {
-			groupInfos = append(groupInfos, ui.Group{GroupId: member.
-				UserName, Name: member.NickName,
-				LastChatTime: time.Now()})
-		} else {
-			userInfos = append(userInfos, ui.UserInfo{UserId: member.
-				UserName, Nick: member.NickName, DisplayName: member.RemarkName,
-				LastChatTime: time.Now()})
-		}
+		userInfos = append(userInfos, ui.UserInfo{UserId: member.
+			UserName, Nick: member.NickName, DisplayName: member.RemarkName,
+			LastChatTime: time.Now()})
 	}
 
 	for _, member := range wechat.PublicUserList {
 		userInfos = append(userInfos, ui.UserInfo{UserId: member.
 			UserName, Nick: member.NickName, DisplayName: member.RemarkName,
+			LastChatTime: time.Now()})
+	}
+
+	for _, member := range wechat.GroupMemberList {
+		groupInfos = append(groupInfos, ui.Group{GroupId: member.
+			UserName, Name: member.NickName,
 			LastChatTime: time.Now()})
 	}
 	//groupIdList := []string{}
@@ -155,6 +155,12 @@ func main() {
 	go wechat.SyncDaemon(msgIn, imageIn)
 
 	go wechat.MsgDaemon(msgOut, autoChan)
+
+	logger.Println("recentUserList size=", len(recentUserList))
+	logger.Println("recentGroupList size=", len(recentGroupList))
+	logger.Println("userInfos size=", len(userInfos))
+	logger.Println("groupInfos size=", len(groupInfos))
+
 	ui.NewLayout(recentUserList, recentGroupList, userInfos, groupInfos,
 		nil,
 		wechat.User.NickName,
