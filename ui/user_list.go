@@ -125,7 +125,13 @@ func merge(userInfo []UserInfo, groupInfo []Group) *SortItems {
 func (this *UserList) renderTab() {
 	this.currentTab = this.tabWidgets[this.tabPane.ActiveTabIndex]
 	this.currentList = this.tabLists[this.tabPane.ActiveTabIndex]
+	this.refreshCurrentSelect()
 	ui.Render(this.tabPane, this.currentTab)
+}
+
+func (this *UserList) refreshCurrentSelect() {
+	this.curUserIndex = this.currentTab.SelectedRow
+	this.selectEvent <- (*this.currentList)[this.curUserIndex]
 }
 
 func (this *UserList) Reset() {
@@ -255,15 +261,13 @@ func NewUserList(recentUserList []UserInfo, recentGroupList []Group, userList []
 
 func (l *UserList) nextUser() {
 	l.currentTab.ScrollDown()
-	l.curUserIndex = l.currentTab.SelectedRow
-	l.selectEvent <- (*l.currentList)[l.curUserIndex]
+	l.refreshCurrentSelect()
 	ui.Render(l.currentTab)
 }
 
 func (l *UserList) prevUser() {
 	l.currentTab.ScrollUp()
-	l.curUserIndex = l.currentTab.SelectedRow
-	l.selectEvent <- (*l.currentList)[l.curUserIndex]
+	l.refreshCurrentSelect()
 	ui.Render(l.currentTab)
 }
 
