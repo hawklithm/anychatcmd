@@ -131,7 +131,11 @@ func (this *UserList) renderTab() {
 
 func (this *UserList) refreshCurrentSelect() {
 	this.curUserIndex = this.currentTab.SelectedRow
-	this.selectEvent <- (*this.currentList)[this.curUserIndex]
+	if this.selectEvent != nil {
+		this.selectEvent <- (*this.currentList)[this.curUserIndex]
+	} else {
+		this.logger.Println("warning!", "no select event channel set!")
+	}
 }
 
 func (this *UserList) Reset() {
