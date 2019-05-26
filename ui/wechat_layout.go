@@ -66,6 +66,7 @@ type WidgetPicker interface {
 func NewLayout(
 	recentUserList []UserInfo, recentGroupList []Group, userList []UserInfo,
 	groupList []Group, userChangeEvent chan UserChangeEvent,
+	selectEvent chan SelectEvent,
 	myName, myID string,
 	msgIn chan wechat.Message, msgOut chan wechat.MessageOut,
 	imageIn chan wechat.MessageImage,
@@ -88,7 +89,7 @@ func NewLayout(
 	var pickerList []WidgetPicker
 
 	userListWidget := NewUserList(recentUserList, recentGroupList, userList,
-		groupList, userChangeEvent, width*2/10, height, 0, 0, logger)
+		groupList, userChangeEvent, selectEvent, width*2/10, height, 0, 0, logger)
 	userListWidget.Pick()
 
 	pickerList = append(pickerList, userListWidget)

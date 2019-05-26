@@ -162,7 +162,7 @@ func main() {
 	logger.Println("groupInfos size=", len(groupInfos))
 
 	ui.NewLayout(recentUserList, recentGroupList, userInfos, groupInfos,
-		nil,
+		nil, nil,
 		wechat.User.NickName,
 		wechat.User.UserName, msgIn, msgOut, imageIn, closeChan, autoChan,
 		wxLogger)

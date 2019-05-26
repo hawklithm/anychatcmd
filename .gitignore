@@ -9,8 +9,6 @@ anychatcmd
 *.so
 *.py
 # Folders
-_obj
-_test
 
 log.txt
 
@@ -28,5 +26,3 @@ _testmain.go
 
 *.test
 *.prof
-Status API Training Shop Blog About
-© 2016 GitHub, Inc. Terms Privacy Security Contact Help
