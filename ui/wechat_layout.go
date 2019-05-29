@@ -25,9 +25,7 @@ const (
 )
 
 type Layout struct {
-	chatBox         *widgets.ImageList //聊天窗口
-	msgInBox        *widgets.Paragraph //消息窗口
-	editBox         *widgets.Paragraph // 输入框
+	chatBox         *ChatBox //聊天窗口
 	userIDList      []string
 	curUserIndex    int
 	masterName      string // 主人的名字
@@ -37,7 +35,6 @@ type Layout struct {
 	Notify          bool
 	userIn          chan []string            // 用户的刷新
 	msgIn           chan wechat.Message      // 消息刷新
-	msgOut          chan wechat.MessageOut   //  消息输出
 	imageIn         chan wechat.MessageImage //  图片消息
 	closeChan       chan int
 	autoReply       chan int
@@ -89,43 +86,17 @@ func NewLayout(
 	var pickerList []WidgetPicker
 
 	userListWidget := NewUserList(recentUserList, recentGroupList, userList,
-		groupList, userChangeEvent, selectEvent, width*2/10, height, 0, 0, logger)
+		groupList, selectEvent, width*2/10, height, 0, 0, logger)
 	userListWidget.Pick()
 
 	pickerList = append(pickerList, userListWidget)
 
-	chatBox := widgets.NewImageList()
-	chatBox.SetRect(width*2/10, 0, width*6/10, height*8/10)
+	chatBox := NewChatBox(width*2/10, 0, width*8/10, height, logger)
 
-	chatBox.TextStyle = ui.NewStyle(ui.ColorRed)
-	//chatBox.Title = "to:" + userNickList[0]
-	chatBox.BorderStyle = ui.NewStyle(ui.ColorMagenta)
-
-	msgInBox := widgets.NewParagraph()
-
-	msgInBox.SetRect(width*6/10, 0, width, height*8/10)
-
-	msgInBox.TextStyle = ui.NewStyle(ui.ColorWhite)
-	msgInBox.Title = "消息窗"
-	msgInBox.BorderStyle = ui.NewStyle(ui.ColorCyan)
-
-	editBox := widgets.NewParagraph()
-	editBox.SetRect(width*2/10, height*8/10, width, height)
-
-	editBox.TextStyle = ui.NewStyle(ui.ColorWhite)
-	editBox.Title = "输入框"
-	editBox.BorderStyle = ui.NewStyle(ui.ColorCyan)
-
-	//pageCount := len(userNickList) / PageSize
-	//if len(userNickList)%PageSize != 0 {
-	//	pageCount++
-	//}
 	l := &Layout{
 		userCur:         0,
 		curPage:         0,
-		msgInBox:        msgInBox,
 		chatBox:         chatBox,
-		editBox:         editBox,
 		msgIn:           msgIn,
 		msgOut:          msgOut,
 		imageIn:         imageIn,
@@ -146,9 +117,6 @@ func NewLayout(
 
 	go l.displayMsgIn()
 
-	// 注册各个组件
-	ui.Render(l.msgInBox, l.chatBox, l.editBox)
-
 	uiEvents := ui.PollEvents()
 	for {
 		e := <-uiEvents
@@ -165,48 +133,6 @@ func NewLayout(
 		switch e.ID {
 		case "<C-c>", "<C-d>":
 			return
-		case "<Enter>":
-			appendTextToList(l.chatBox, l.masterName+"->"+l.chatBox.
-				Title+":"+l.editBox.Text+"\n")
-			l.logger.Println(l.editBox.Text)
-			if l.editBox.Text != "" {
-				l.SendText(l.editBox.Text)
-			}
-			resetPar(l.editBox)
-		case "<C-w>":
-			l.showDetail()
-		case "<C-j>":
-			l.NextSelect()
-		case "<C-k>":
-			l.PrevSelect()
-		case "<C-a>":
-			l.Notify = !l.Notify
-			l.logger.Println("notify state", l.Notify)
-		case "<Space>":
-			appendToPar(l.editBox, " ")
-		case "<Backspace>":
-			if l.editBox.Text != "" {
-				runslice := []rune(l.editBox.Text)
-				if len(runslice) == 0 {
-					return
-				} else {
-					l.editBox.Text = string(runslice[0 : len(runslice)-1])
-					setPar(l.editBox)
-				}
-			}
-		default:
-			//logger.Println("default event received, payload=", e.Payload,
-			//	"id=", e.ID, "type=", e.Type)
-			if e.Type == ui.KeyboardEvent {
-				k := e.ID
-				appendToPar(l.editBox, k)
-			} else if e.Type == ui.ResizeEvent {
-				logger.Println("resize event received, payload=", e.Payload,
-					"id=", e.ID)
-			} else if e.Type == ui.MouseEvent {
-				logger.Println("mouse event received, payload=", e.Payload,
-					"id=", e.ID)
-			}
 		}
 
 	}
@@ -431,54 +357,6 @@ func (l *Layout) NextSelect() {
 	ui.Render(l.chatBox)
 }
 
-func (l *Layout) SendText(text string) {
-	msg := wechat.MessageOut{}
-	msg.Content = text
-	msg.ToUserName = l.userIDList[l.userCur]
-	//appendToPar(l.msgInBox, fmt.Sprintf(text))
-
-	l.apendChatLogOut(msg)
-
-	l.msgOut <- msg
-}
-
-func (l *Layout) apendChatLogOut(msg wechat.MessageOut) *wechat.MessageRecord {
-	if l.userChatLog[msg.ToUserName] == nil {
-		l.userChatLog[msg.ToUserName] = []*wechat.MessageRecord{}
-	}
-
-	newMsg := wechat.NewMessageRecordOut(l.masterID,
-		msg)
-
-	if l.groupMemberMap[newMsg.From] != nil {
-		if newMsg.Type == 3 {
-			newMsg.Content = l.getUserIdAndConvertImgContent(newMsg.Content,
-				l.groupMemberMap[newMsg.From])
-
-		} else {
-			newMsg.Content = l.getUserIdFromContent(newMsg.Content,
-				l.groupMemberMap[newMsg.From])
-		}
-	} else {
-		if newMsg.Type == 3 {
-			newMsg.Content = "图片"
-		}
-	}
-
-	if l.userMap[newMsg.To] != "" {
-		newMsg.To = l.userMap[newMsg.To]
-	}
-
-	if l.userMap[newMsg.From] != "" {
-		newMsg.From = l.userMap[newMsg.From]
-	}
-
-	l.userChatLog[msg.ToUserName] = append(l.userChatLog[msg.ToUserName],
-		newMsg)
-
-	return newMsg
-}
-
 func (l *Layout) getUserIdFromContent(content string,
 	userMap map[string]string) string {
 	if userMap == nil {
@@ -611,13 +489,6 @@ func appendToPar(p *widgets.Paragraph, k string) {
 		p.Text = strings.Join(subText[len(subText)-20:], "\n")
 	}
 	p.Text += k
-	ui.Render(p)
-}
-
-func appendTextToList(p *widgets.ImageList, k string) {
-	item := widgets.NewImageListItem()
-	item.Text = k
-	p.Rows = append(p.Rows, item)
 	ui.Render(p)
 }
 

@@ -62,7 +62,7 @@ func Test_UserList(t *testing.T) {
 
 	userList := ui.NewUserList(ruserInfoArray, rgroupArray, userInfoArray,
 		groupArray,
-		nil, nil, 40, 40, 0, 0, logger)
+		nil, 40, 40, 0, 0, logger)
 
 	userList.Pick()
 

@@ -20,7 +20,6 @@ type UserList struct {
 	recentGroupList []Group
 	userList        *SortItems
 	groupList       *SortItems
-	userChangeEvent chan UserChangeEvent
 	selectEvent     chan SelectEvent
 
 	tabPane          *widgets.TabPane
@@ -234,7 +233,7 @@ func convertGroupsToSortItems(groups []Group) *SortItems {
 
 func NewUserList(recentUserList []UserInfo, recentGroupList []Group, userList []UserInfo,
 	groupList []Group,
-	userChangeEvent chan UserChangeEvent, selectEvent chan SelectEvent, width,
+	selectEvent chan SelectEvent, width,
 	height,
 	baseX, baseY int,
 	logger *log.Logger) *UserList {
@@ -253,7 +252,6 @@ func NewUserList(recentUserList []UserInfo, recentGroupList []Group, userList []
 		recentGroupList: recentGroupList,
 		userList:        convertUsersToSortItems(userList),
 		groupList:       convertGroupsToSortItems(groupList),
-		userChangeEvent: userChangeEvent,
 		selectEvent:     selectEvent,
 	}
 
