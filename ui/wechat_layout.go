@@ -149,82 +149,6 @@ func (l *Layout) messageReceived(newMsg *wechat.MessageRecord) {
 	appendToPar(l.msgInBox, msgText)
 }
 
-func (l *Layout) displayMsgIn() {
-	var (
-		msg    wechat.Message
-		imgMsg wechat.MessageImage
-	)
-
-	for {
-		select {
-
-		case imgMsg = <-l.imageIn:
-
-			var newMsg *wechat.MessageRecord
-
-			if l.masterID == imgMsg.FromUserName {
-				newMsg = l.apendChatLogOut(wechat.MessageOut{ToUserName: imgMsg.
-					ToUserName, Content: imgMsg.Content, Type: imgMsg.MsgType,
-					MsgId: imgMsg.MsgId})
-			} else {
-				newMsg = l.apendImageChatLogIn(imgMsg)
-			}
-
-			l.logger.Println("message receive = ", newMsg.String())
-
-			l.messageReceived(newMsg)
-
-			var targetUserName string
-			if l.masterID == imgMsg.FromUserName {
-				targetUserName = imgMsg.ToUserName
-			} else {
-				targetUserName = imgMsg.FromUserName
-			}
-			if targetUserName == l.userIDList[l.userCur] {
-				l.logger.Println("append to current chatbox", imgMsg.FromUserName,
-					"to=",
-					imgMsg.ToUserName, "content=", imgMsg.Content)
-				appendImageToList(l.chatBox, imgMsg.Img)
-			}
-
-		case msg = <-l.msgIn:
-
-			var newMsg *wechat.MessageRecord
-			msg.Content = TranslateEmoji(ConvertToEmoji(msg.Content))
-
-			if l.masterID == msg.FromUserName {
-				newMsg = l.apendChatLogOut(wechat.MessageOut{ToUserName: msg.
-					ToUserName, Content: msg.Content, Type: msg.MsgType,
-					MsgId: msg.MsgId})
-			} else {
-				newMsg = l.apendChatLogIn(msg)
-			}
-
-			l.logger.Println("message receive = ", newMsg.String())
-
-			l.messageReceived(newMsg)
-
-			var targetUserName string
-			if l.masterID == msg.FromUserName {
-				targetUserName = msg.ToUserName
-			} else {
-				targetUserName = msg.FromUserName
-			}
-			if targetUserName == l.userIDList[l.userCur] {
-				l.logger.Println("append to current chatbox", msg.FromUserName,
-					"to=",
-					msg.ToUserName, "content=", msg.Content)
-				appendToList(l.chatBox, newMsg)
-			}
-
-		case <-l.closeChan:
-			break
-		}
-
-	}
-	return
-}
-
 func setRows(p *widgets.ImageList, records []*wechat.MessageRecord) {
 	var rows []*widgets.ImageListItem
 	for _, i := range records {
@@ -244,11 +168,6 @@ func setRows(p *widgets.ImageList, records []*wechat.MessageRecord) {
 	if p.SelectedRow < 0 {
 		p.SelectedRow = 0
 	}
-}
-
-func (l *Layout) PrevSelect() {
-	l.chatBox.ScrollUp()
-	ui.Render(l.chatBox)
 }
 
 var commands = map[string]string{
@@ -319,42 +238,6 @@ func Open(uri string) error {
 
 	cmd := exec.Command(run, uri)
 	return cmd.Start()
-}
-
-func (l *Layout) showDetail() {
-	item := l.chatBox.Rows[l.chatBox.SelectedRow]
-	l.logger.Println("item detail selected! item=", item)
-	if item.Img == nil && item.Url == "" {
-		return
-	}
-	if item.Url != "" {
-		if err := Open(item.Url); err != nil {
-			panic(err)
-		}
-	} else if item.Img != nil {
-		root := "/tmp"
-		key := time.Now().UTC().UnixNano()
-		builder := strings.Builder{}
-		builder.WriteString(root)
-		builder.WriteRune(os.PathSeparator)
-		builder.WriteString(strconv.FormatInt(key, 10))
-		builder.WriteString(".png")
-		out, err := os.Create(builder.String())
-		if err != nil {
-			l.logger.Fatalln("open file failed! path=", builder.String(), err)
-		}
-		if err := png.Encode(out, item.Img); err != nil {
-			l.logger.Fatalln("encode image failed! path=", builder.String(), err)
-		} else {
-			_ = open.Start(builder.String())
-		}
-	}
-
-}
-
-func (l *Layout) NextSelect() {
-	l.chatBox.ScrollDown()
-	ui.Render(l.chatBox)
 }
 
 func (l *Layout) getUserIdFromContent(content string,

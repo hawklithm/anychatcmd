@@ -214,6 +214,16 @@ func (w *Wechat) dealImageMessage(msg Message, imageIn chan MessageImage) {
 	}
 }
 
+func (w *Wechat) getImageMessage(msg Message) *image.Image {
+	msgId := msg.MsgId
+	if img, err := w.getImg(msgId, false); err != nil {
+		w.Log.Fatalln("get image error! msgId=", msgId, err)
+		return nil
+	} else {
+		return &img
+	}
+}
+
 //同步守护goroutine
 func (w *Wechat) SyncDaemon(msgIn chan Message, imageIn chan MessageImage) {
 	for {
@@ -287,13 +297,15 @@ func (w *Wechat) SyncDaemon(msgIn chan Message, imageIn chan MessageImage) {
 					case 47:
 						if hasProductId == 1 {
 							msg.Content = "[收到了一个表情，请在手机上查看]"
-							msgIn <- msg
 						} else {
-							w.dealImageMessage(msg, imageIn)
+							msg.MsgType = 3
+							msg.Img = w.getImageMessage(msg)
 						}
+						msgIn <- msg
 					case 3:
 						//图片
-						w.dealImageMessage(msg, imageIn)
+						msg.Img = w.getImageMessage(msg)
+						msgIn <- msg
 					case 34:
 					//语音
 					case 49:

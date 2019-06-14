@@ -14,12 +14,12 @@ type Config struct {
 	ReplyMsgs []string `json:"reply_msgs"`
 }
 
-type MessageOut struct {
-	ToUserName string
-	Content    string
-	Type       int
-	MsgId      string
-}
+//type MessageOut struct {
+//	ToUserName string
+//	Content    string
+//	Type       int
+//	MsgId      string
+//}
 
 type MessageImage struct {
 	Img image.Image
@@ -31,14 +31,16 @@ type MessageImage struct {
 type MessageRecord struct {
 	From       string
 	To         string
-	Content    string
+	Text       string
+	Speaker    string
+	MsgId      string
 	ContentImg image.Image
 	Type       int
 	Url        string
 }
 
 func (m *MessageRecord) String() string {
-	return m.From + "->" + m.To + ": " + m.Content
+	return m.From + "->" + m.To + ": " + m.Text
 }
 
 type Message struct {
@@ -64,6 +66,7 @@ type Message struct {
 	FromUserNickName     string
 	ToUserNickName       string
 	MsgId                string
+	Img                  *image.Image
 }
 
 func (m Message) String() string {
