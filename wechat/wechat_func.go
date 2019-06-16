@@ -366,14 +366,14 @@ func (w *Wechat) SyncDaemon(msgIn chan Message, imageIn chan MessageImage) {
 	}
 }
 
-func (w *Wechat) MsgDaemon(msgOut chan MessageOut, autoReply chan int) {
-	msg := MessageOut{}
+func (w *Wechat) MsgDaemon(msgOut chan MessageRecord, autoReply chan int) {
+	msg := MessageRecord{}
 	var autoMode int
 	for {
 		select {
 		case msg = <-msgOut:
 			w.Log.Printf("the msg to send %+v", msg)
-			w.SendMsg(msg.ToUserName, msg.Content, false)
+			w.SendMsg(msg.To, msg.Text, false)
 		case autoMode = <-autoReply:
 			w.Log.Println("the autoreply mode:", autoMode)
 			if autoMode == 1 {
