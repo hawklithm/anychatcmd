@@ -87,6 +87,8 @@ func NewLayout(
 	chatBox := NewChatBox(width*2/10, 0, width*8/10, height, logger, msgIn,
 		msgOut, selectEvent)
 
+	pickerList = append(pickerList, chatBox)
+
 	_ = &Layout{
 		userCur:         0,
 		curPage:         0,

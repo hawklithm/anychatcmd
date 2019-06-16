@@ -195,22 +195,25 @@ func (w *Wechat) unmarshalHyperLinkXml(content string) *HyperLink {
 	}
 }
 
-func (w *Wechat) dealImageMessage(msg Message, imageIn chan MessageImage) {
+func (w *Wechat) dealImageMessage(msg Message) *MessageRecord {
 	msgId := msg.MsgId
-	//msg.Content = "图片"
 	if img, err := w.getImg(msgId, false); err != nil {
 		w.Log.Fatalln("get image error! msgId=", msgId, err)
+		return nil
 	} else {
 		w.convertMsg(&msg)
 		var targetId string
+		var fromId string
 		if w.User.UserName == msg.FromUserName {
 			targetId = msg.ToUserName
+			fromId = msg.FromUserName
 		} else {
 			targetId = msg.FromUserName
+			fromId = msg.ToUserName
 		}
-		imageIn <- MessageImage{Message: msg, Img: img,
-			TargetId: targetId}
-		//msgIn <- msg
+		return &MessageRecord{From: fromId, To: targetId, Text: "图片",
+			ContentImg: img,
+			MsgId:      msgId}
 	}
 }
 
@@ -225,7 +228,7 @@ func (w *Wechat) getImageMessage(msg Message) *image.Image {
 }
 
 //同步守护goroutine
-func (w *Wechat) SyncDaemon(msgIn chan Message, imageIn chan MessageImage) {
+func (w *Wechat) SyncDaemon(msgIn chan Message) {
 	for {
 		w.lastCheckTs = time.Now()
 		resp, err := w.SyncCheck()
@@ -311,7 +314,9 @@ func (w *Wechat) SyncDaemon(msgIn chan Message, imageIn chan MessageImage) {
 					case 49:
 						//链接
 						if msg.AppMsgType == 8 {
-							w.dealImageMessage(msg, imageIn)
+							msg.Img = w.getImageMessage(msg)
+							msg.MsgType = 3
+							msgIn <- msg
 						} else {
 							re := w.unmarshalHyperLinkXml(msg.Content)
 							if msg.FromUserName[:2] == "@@" {

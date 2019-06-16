@@ -148,9 +148,10 @@ func main() {
 
 	msgIn := make(chan chat.Message, maxChanSize)
 	msgOut := make(chan chat.MessageRecord, maxChanSize)
+	selectEvent := make(chan ui.SelectEvent, maxChanSize)
 	autoChan := make(chan int, 1)
 
-	go wechat.SyncDaemon(msgIn, nil)
+	go wechat.SyncDaemon(msgIn)
 
 	go wechat.MsgDaemon(msgOut, autoChan)
 
@@ -160,9 +161,9 @@ func main() {
 	logger.Println("groupInfos size=", len(groupInfos))
 
 	ui.NewLayout(recentUserList, recentGroupList, userInfos, groupInfos,
-		nil, nil,
+		nil, selectEvent,
 		wechat.User.NickName,
-		wechat.User.UserName, msgIn, msgOut, autoChan,
+		wechat.User.UserName, msgIn, msgOut,
 		wxLogger)
 
 }
