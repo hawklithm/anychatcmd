@@ -327,22 +327,22 @@ func createFile(name string, data []byte, isAppend bool) (err error) {
 	return
 }
 
-func NewMessageRecordOut(from string, message MessageOut) *MessageRecord {
+func NewMessageRecordOut(from string, message MessageRecord) *MessageRecord {
 	return &MessageRecord{
-		From:    from,
-		To:      message.ToUserName,
-		Content: message.Content,
-		Type:    message.Type,
+		From: from,
+		To:   message.To,
+		Text: message.Text,
+		Type: message.Type,
 	}
 }
 
 func NewMessageRecordIn(message Message) *MessageRecord {
 	return &MessageRecord{
-		From:    message.FromUserName,
-		To:      message.ToUserName,
-		Content: message.Content,
-		Type:    message.MsgType,
-		Url:     message.Url,
+		From: message.FromUserName,
+		To:   message.ToUserName,
+		Text: message.Content,
+		Type: message.MsgType,
+		Url:  message.Url,
 	}
 }
 
@@ -350,7 +350,7 @@ func NewImageMessageRecordIn(message MessageImage) *MessageRecord {
 	return &MessageRecord{
 		From:       message.FromUserName,
 		To:         message.ToUserName,
-		Content:    message.Content,
+		Text:       message.Content,
 		Type:       message.MsgType,
 		ContentImg: message.Img,
 	}

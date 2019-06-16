@@ -2,20 +2,14 @@ package ui
 
 import (
 	"fmt"
-	"github.com/skratchdot/open-golang/open"
-	"image"
-	"image/png"
-	"log"
-	"os"
-	"os/exec"
-	"runtime"
-	"strconv"
-	"strings"
-	"time"
-
 	"github.com/hawklithm/anychatcmd/wechat"
 	ui "github.com/hawklithm/termui"
 	"github.com/hawklithm/termui/widgets"
+	"image"
+	"log"
+	"os/exec"
+	"runtime"
+	"strings"
 )
 
 const (
@@ -65,9 +59,8 @@ func NewLayout(
 	groupList []Group, userChangeEvent chan UserChangeEvent,
 	selectEvent chan SelectEvent,
 	myName, myID string,
-	msgIn chan wechat.Message, msgOut chan wechat.MessageOut,
-	imageIn chan wechat.MessageImage,
-	closeChan, autoReply chan int, logger *log.Logger) {
+	msgIn chan wechat.Message, msgOut chan wechat.MessageRecord,
+	autoReply chan int, logger *log.Logger) {
 
 	//	chinese := false
 	err := ui.Init()
@@ -91,16 +84,13 @@ func NewLayout(
 
 	pickerList = append(pickerList, userListWidget)
 
-	chatBox := NewChatBox(width*2/10, 0, width*8/10, height, logger)
+	chatBox := NewChatBox(width*2/10, 0, width*8/10, height, logger, msgIn,
+		msgOut, nil)
 
-	l := &Layout{
+	_ = &Layout{
 		userCur:         0,
 		curPage:         0,
 		chatBox:         chatBox,
-		msgIn:           msgIn,
-		msgOut:          msgOut,
-		imageIn:         imageIn,
-		closeChan:       closeChan,
 		currentMsgCount: 0,
 		maxMsgCount:     18,
 		pageSize:        PageSize,
@@ -114,8 +104,6 @@ func NewLayout(
 		msgIdList:       make(map[string][]string),
 		Notify:          true,
 	}
-
-	go l.displayMsgIn()
 
 	uiEvents := ui.PollEvents()
 	for {
@@ -139,36 +127,26 @@ func NewLayout(
 
 }
 
-func (l *Layout) messageReceived(newMsg *wechat.MessageRecord) {
-	msgText := newMsg.String() + "\n"
-	if l.Notify {
-		if err := ShowNotify(msgText); err != nil {
-			l.logger.Println("notify error happen", err.Error())
-		}
-	}
-	appendToPar(l.msgInBox, msgText)
-}
-
-func setRows(p *widgets.ImageList, records []*wechat.MessageRecord) {
-	var rows []*widgets.ImageListItem
-	for _, i := range records {
-		item := widgets.NewImageListItem()
-		if i.ContentImg != nil {
-			item.Img = i.ContentImg
-		} else if i.Url != "" {
-			item.Url = i.Url
-			item.Text = i.From + "->" + i.To + ": " + i.Content
-		} else {
-			item.Text = i.From + "->" + i.To + ": " + i.Content
-		}
-		rows = append(rows, item)
-	}
-	p.Rows = rows
-	p.SelectedRow = len(p.Rows) - 1
-	if p.SelectedRow < 0 {
-		p.SelectedRow = 0
-	}
-}
+//func setRows(p *widgets.ImageList, records []*wechat.MessageRecord) {
+//	var rows []*widgets.ImageListItem
+//	for _, i := range records {
+//		item := widgets.NewImageListItem()
+//		if i.ContentImg != nil {
+//			item.Img = i.ContentImg
+//		} else if i.Url != "" {
+//			item.Url = i.Url
+//			item.Text = i.From + "->" + i.To + ": " + i.Content
+//		} else {
+//			item.Text = i.From + "->" + i.To + ": " + i.Content
+//		}
+//		rows = append(rows, item)
+//	}
+//	p.Rows = rows
+//	p.SelectedRow = len(p.Rows) - 1
+//	if p.SelectedRow < 0 {
+//		p.SelectedRow = 0
+//	}
+//}
 
 var commands = map[string]string{
 	"darwin": "open",
@@ -273,77 +251,77 @@ func (l *Layout) getUserIdAndConvertImgContent(content string,
 	return s[0] + ":" + AddUnSelectedBg("图片")
 }
 
-func (l *Layout) apendChatLogIn(msg wechat.Message) *wechat.MessageRecord {
-	if l.userChatLog[msg.FromUserName] == nil {
-		l.userChatLog[msg.FromUserName] = []*wechat.MessageRecord{}
-	}
+//func (l *Layout) apendChatLogIn(msg wechat.Message) *wechat.MessageRecord {
+//	if l.userChatLog[msg.FromUserName] == nil {
+//		l.userChatLog[msg.FromUserName] = []*wechat.MessageRecord{}
+//	}
+//
+//	newMsg := wechat.NewMessageRecordIn(msg)
+//
+//	if l.groupMemberMap[newMsg.From] != nil {
+//		if newMsg.Type == 3 {
+//			newMsg.Content = l.getUserIdAndConvertImgContent(newMsg.Content,
+//				l.groupMemberMap[newMsg.From])
+//		} else {
+//			newMsg.Content = l.getUserIdFromContent(newMsg.Content,
+//				l.groupMemberMap[newMsg.From])
+//		}
+//	} else {
+//		if newMsg.Type == 3 {
+//			newMsg.Content = "图片"
+//		}
+//	}
+//
+//	if l.userMap[newMsg.To] != "" {
+//		newMsg.To = l.userMap[newMsg.To]
+//	}
+//
+//	if l.userMap[newMsg.From] != "" {
+//		newMsg.From = l.userMap[newMsg.From]
+//	}
+//
+//	l.userChatLog[msg.FromUserName] = append(l.userChatLog[msg.
+//		FromUserName], newMsg)
+//
+//	return newMsg
+//
+//}
 
-	newMsg := wechat.NewMessageRecordIn(msg)
-
-	if l.groupMemberMap[newMsg.From] != nil {
-		if newMsg.Type == 3 {
-			newMsg.Content = l.getUserIdAndConvertImgContent(newMsg.Content,
-				l.groupMemberMap[newMsg.From])
-		} else {
-			newMsg.Content = l.getUserIdFromContent(newMsg.Content,
-				l.groupMemberMap[newMsg.From])
-		}
-	} else {
-		if newMsg.Type == 3 {
-			newMsg.Content = "图片"
-		}
-	}
-
-	if l.userMap[newMsg.To] != "" {
-		newMsg.To = l.userMap[newMsg.To]
-	}
-
-	if l.userMap[newMsg.From] != "" {
-		newMsg.From = l.userMap[newMsg.From]
-	}
-
-	l.userChatLog[msg.FromUserName] = append(l.userChatLog[msg.
-		FromUserName], newMsg)
-
-	return newMsg
-
-}
-
-func (l *Layout) apendImageChatLogIn(msg wechat.MessageImage) *wechat.MessageRecord {
-	if l.userChatLog[msg.FromUserName] == nil {
-		l.userChatLog[msg.FromUserName] = []*wechat.MessageRecord{}
-	}
-
-	newMsg := wechat.NewImageMessageRecordIn(msg)
-
-	if l.groupMemberMap[newMsg.From] != nil {
-		if newMsg.Type == 3 {
-			newMsg.Content = l.getUserIdAndConvertImgContent(newMsg.Content,
-				l.groupMemberMap[newMsg.From])
-		} else {
-			newMsg.Content = l.getUserIdFromContent(newMsg.Content,
-				l.groupMemberMap[newMsg.From])
-		}
-	} else {
-		if newMsg.Type == 3 {
-			newMsg.Content = "图片"
-		}
-	}
-
-	if l.userMap[newMsg.To] != "" {
-		newMsg.To = l.userMap[newMsg.To]
-	}
-
-	if l.userMap[newMsg.From] != "" {
-		newMsg.From = l.userMap[newMsg.From]
-	}
-
-	l.userChatLog[msg.FromUserName] = append(l.userChatLog[msg.
-		FromUserName], newMsg)
-
-	return newMsg
-
-}
+//func (l *Layout) apendImageChatLogIn(msg wechat.MessageImage) *wechat.MessageRecord {
+//	if l.userChatLog[msg.FromUserName] == nil {
+//		l.userChatLog[msg.FromUserName] = []*wechat.MessageRecord{}
+//	}
+//
+//	newMsg := wechat.NewImageMessageRecordIn(msg)
+//
+//	if l.groupMemberMap[newMsg.From] != nil {
+//		if newMsg.Type == 3 {
+//			newMsg.Content = l.getUserIdAndConvertImgContent(newMsg.Content,
+//				l.groupMemberMap[newMsg.From])
+//		} else {
+//			newMsg.Content = l.getUserIdFromContent(newMsg.Content,
+//				l.groupMemberMap[newMsg.From])
+//		}
+//	} else {
+//		if newMsg.Type == 3 {
+//			newMsg.Content = "图片"
+//		}
+//	}
+//
+//	if l.userMap[newMsg.To] != "" {
+//		newMsg.To = l.userMap[newMsg.To]
+//	}
+//
+//	if l.userMap[newMsg.From] != "" {
+//		newMsg.From = l.userMap[newMsg.From]
+//	}
+//
+//	l.userChatLog[msg.FromUserName] = append(l.userChatLog[msg.
+//		FromUserName], newMsg)
+//
+//	return newMsg
+//
+//}
 
 func AddSelectedBg(msg string) string {
 	return AddBgColor(DelBgColor(msg), SelectedMark)
@@ -402,14 +380,14 @@ func setPar(p *widgets.Paragraph) {
 	ui.Render(p)
 }
 
-func convertChatLogToText(records []*wechat.MessageRecord) string {
-	var b strings.Builder
-	var start = 0
-	if len(records) > 20 {
-		start = len(records) - 20
-	}
-	for _, i := range records[start:] {
-		_, _ = fmt.Fprint(&b, i.From+"->"+i.To+": "+i.Content+"\n")
-	}
-	return b.String()
-}
+//func convertChatLogToText(records []*wechat.MessageRecord) string {
+//	var b strings.Builder
+//	var start = 0
+//	if len(records) > 20 {
+//		start = len(records) - 20
+//	}
+//	for _, i := range records[start:] {
+//		_, _ = fmt.Fprint(&b, i.From+"->"+i.To+": "+i.Content+"\n")
+//	}
+//	return b.String()
+//}

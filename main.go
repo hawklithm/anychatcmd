@@ -147,12 +147,10 @@ func main() {
 	//}
 
 	msgIn := make(chan chat.Message, maxChanSize)
-	msgOut := make(chan chat.MessageOut, maxChanSize)
-	imageIn := make(chan chat.MessageImage, maxChanSize)
-	closeChan := make(chan int, 1)
+	msgOut := make(chan chat.MessageRecord, maxChanSize)
 	autoChan := make(chan int, 1)
 
-	go wechat.SyncDaemon(msgIn, imageIn)
+	go wechat.SyncDaemon(msgIn, nil)
 
 	go wechat.MsgDaemon(msgOut, autoChan)
 
@@ -164,7 +162,7 @@ func main() {
 	ui.NewLayout(recentUserList, recentGroupList, userInfos, groupInfos,
 		nil, nil,
 		wechat.User.NickName,
-		wechat.User.UserName, msgIn, msgOut, imageIn, closeChan, autoChan,
+		wechat.User.UserName, msgIn, msgOut, autoChan,
 		wxLogger)
 
 }
