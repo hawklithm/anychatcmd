@@ -42,7 +42,7 @@ func Test_chat_box(t *testing.T) {
 		Nick: "testNick", DisplayName: "TestDisplayName"}, {UserId: "12345",
 		Nick: "testNick2", DisplayName: "TestDisplayName2"}},
 		Name:    "test1",
-		GroupId: "testId"}
+		GroupId: "12345678"}
 
 	msgIn <- wechat.Message{FromUserName: "12345678", Content: "123125125",
 		MsgType: 1, MsgId: "123124124", ToUserName: "87654321"}
@@ -52,6 +52,12 @@ func Test_chat_box(t *testing.T) {
 		MsgType: 1, MsgId: "123124125", ToUserName: "87654321"}
 
 	uiEvents := termui.PollEvents()
+
+	go func() {
+		for {
+			<-msgOut
+		}
+	}()
 
 	for {
 		e := <-uiEvents

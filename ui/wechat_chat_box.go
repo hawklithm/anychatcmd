@@ -4,8 +4,13 @@ import (
 	"github.com/hawklithm/anychatcmd/wechat"
 	"github.com/hawklithm/termui"
 	"github.com/hawklithm/termui/widgets"
+	"github.com/skratchdot/open-golang/open"
+	"image/png"
 	"log"
+	"os"
+	"strconv"
 	"strings"
+	"time"
 )
 
 type ChatBox struct {
@@ -49,33 +54,35 @@ func (l *ChatBox) Unpick() {
 }
 
 func (l *ChatBox) showDetail() {
-	//item := l.chatBox.Rows[l.chatBox.SelectedRow]
-	//l.logger.Println("item detail selected! item=", item)
-	//if item.Img == nil && item.Url == "" {
-	//	return
-	//}
-	//if item.Url != "" {
-	//	if err := Open(item.Url); err != nil {
-	//		panic(err)
-	//	}
-	//} else if item.Img != nil {
-	//	root := "/tmp"
-	//	key := time.Now().UTC().UnixNano()
-	//	builder := strings.Builder{}
-	//	builder.WriteString(root)
-	//	builder.WriteRune(os.PathSeparator)
-	//	builder.WriteString(strconv.FormatInt(key, 10))
-	//	builder.WriteString(".png")
-	//	out, err := os.Create(builder.String())
-	//	if err != nil {
-	//		l.logger.Fatalln("open file failed! path=", builder.String(), err)
-	//	}
-	//	if err := png.Encode(out, item.Img); err != nil {
-	//		l.logger.Fatalln("encode image failed! path=", builder.String(), err)
-	//	} else {
-	//		_ = open.Start(builder.String())
-	//	}
-	//}
+	record := l.userChatLog[l.Id]
+	l.logger.Println("current record is= ", record)
+	item := record.record[l.conversationBox.SelectedRow]
+	l.logger.Println("item detail selected! item=", item)
+	if item.ContentImg == nil && item.Url == "" {
+		return
+	}
+	if item.Url != "" {
+		if err := Open(item.Url); err != nil {
+			panic(err)
+		}
+	} else if item.ContentImg != nil {
+		root := "/tmp"
+		key := time.Now().UTC().UnixNano()
+		builder := strings.Builder{}
+		builder.WriteString(root)
+		builder.WriteRune(os.PathSeparator)
+		builder.WriteString(strconv.FormatInt(key, 10))
+		builder.WriteString(".png")
+		out, err := os.Create(builder.String())
+		if err != nil {
+			l.logger.Fatalln("open file failed! path=", builder.String(), err)
+		}
+		if err := png.Encode(out, item.ContentImg); err != nil {
+			l.logger.Fatalln("encode image failed! path=", builder.String(), err)
+		} else {
+			_ = open.Start(builder.String())
+		}
+	}
 
 }
 
@@ -85,6 +92,7 @@ func (l *ChatBox) appendToConversationBox(msg wechat.MessageRecord) {
 	item.Img = msg.ContentImg
 	item.Text = msg.Text
 	l.conversationBox.Rows = append(l.conversationBox.Rows, item)
+	termui.Render(l.conversationBox)
 }
 
 func (l *ChatBox) NextSelect() {
@@ -101,8 +109,6 @@ func (l *ChatBox) Action(e termui.Event) bool {
 	switch e.ID {
 	case "<Enter>":
 		if l.editBox.Text != "" {
-			appendTextToList(l.conversationBox, l.MyName+"->"+l.name+
-				":"+l.editBox.Text+"\n")
 			l.SendText(l.editBox.Text)
 		}
 		resetPar(l.editBox)
@@ -145,13 +151,6 @@ func (l *ChatBox) Action(e termui.Event) bool {
 		}
 		return false
 	}
-}
-
-func appendTextToList(p *widgets.ImageList, k string) {
-	item := widgets.NewImageListItem()
-	item.Text = k
-	p.Rows = append(p.Rows, item)
-	termui.Render(p)
 }
 
 func (l *ChatBox) SendText(text string) {
