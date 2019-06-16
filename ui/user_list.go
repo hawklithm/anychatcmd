@@ -50,6 +50,7 @@ type SelectEvent interface {
 	GetName() string
 	GetType() string
 	GetLastChatTime() time.Time
+	GetUserList() []*UserInfo
 }
 
 type UserInfo struct {
@@ -57,6 +58,10 @@ type UserInfo struct {
 	Nick         string
 	DisplayName  string
 	LastChatTime time.Time
+}
+
+func (l UserInfo) GetUserList() []*UserInfo {
+	return []*UserInfo{&l}
 }
 
 func (l UserInfo) GetLastChatTime() time.Time {
@@ -77,10 +82,14 @@ func (l UserInfo) GetType() string {
 
 //用户群组
 type Group struct {
-	UserList     []UserInfo
+	UserList     []*UserInfo
 	Name         string
 	GroupId      string
 	LastChatTime time.Time
+}
+
+func (l Group) GetUserList() []*UserInfo {
+	return l.UserList
 }
 
 func (l Group) GetLastChatTime() time.Time {

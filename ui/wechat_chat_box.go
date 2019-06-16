@@ -23,7 +23,7 @@ type ChatBox struct {
 	width     int
 	height    int
 	msgOut    chan wechat.MessageRecord //  消息输出
-	groupChan chan Group                //  聊天成员变更
+	groupChan chan SelectEvent          //  聊天成员变更
 	messageIn chan wechat.Message       //  聊天成员变更
 
 	conversationBox *widgets.ImageList
@@ -31,7 +31,7 @@ type ChatBox struct {
 	msgInBox        *widgets.Paragraph
 	picked          bool
 	userChatLog     map[string]*ChatLogRecord
-	memberList      []UserInfo
+	memberList      []*UserInfo
 	Id              string
 	name            string
 
@@ -234,7 +234,8 @@ func (l *ChatBox) displayMsgIn() {
 }
 
 func NewChatBox(baseX, baseY, width, height int, logger *log.Logger,
-	msgIn chan wechat.Message, msgOut chan wechat.MessageRecord, groupChan chan Group) *ChatBox {
+	msgIn chan wechat.Message, msgOut chan wechat.MessageRecord,
+	groupChan chan SelectEvent) *ChatBox {
 
 	c := &ChatBox{
 		baseX:     baseX,
@@ -251,12 +252,12 @@ func NewChatBox(baseX, baseY, width, height int, logger *log.Logger,
 	go func() {
 		for {
 			group := <-c.groupChan
-			c.Id = group.GroupId
-			c.name = group.Name
-			c.memberList = group.UserList
+			c.Id = group.GetId()
+			c.name = group.GetName()
+			c.memberList = group.GetUserList()
 			c.memberListMap = make(map[string]*UserInfo)
 			for _, user := range c.memberList {
-				c.memberListMap[user.UserId] = &user
+				c.memberListMap[user.UserId] = user
 			}
 			termui.Render(c.conversationBox)
 		}

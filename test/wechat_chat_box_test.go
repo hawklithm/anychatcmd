@@ -32,13 +32,13 @@ func Test_chat_box(t *testing.T) {
 
 	msgIn := make(chan wechat.Message)
 	msgOut := make(chan wechat.MessageRecord)
-	groupChan := make(chan ui.Group)
+	groupChan := make(chan ui.SelectEvent)
 
 	chatBox := ui.NewChatBox(0, 0, 100, 40, logger, msgIn, msgOut, groupChan)
 
 	chatBox.Pick()
 
-	groupChan <- ui.Group{UserList: []ui.UserInfo{{UserId: "1234",
+	groupChan <- ui.Group{UserList: []*ui.UserInfo{{UserId: "1234",
 		Nick: "testNick", DisplayName: "TestDisplayName"}, {UserId: "12345",
 		Nick: "testNick2", DisplayName: "TestDisplayName2"}},
 		Name:    "test1",

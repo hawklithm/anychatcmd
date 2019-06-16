@@ -60,7 +60,7 @@ func NewLayout(
 	selectEvent chan SelectEvent,
 	myName, myID string,
 	msgIn chan wechat.Message, msgOut chan wechat.MessageRecord,
-	autoReply chan int, logger *log.Logger) {
+	logger *log.Logger) {
 
 	//	chinese := false
 	err := ui.Init()
@@ -85,7 +85,7 @@ func NewLayout(
 	pickerList = append(pickerList, userListWidget)
 
 	chatBox := NewChatBox(width*2/10, 0, width*8/10, height, logger, msgIn,
-		msgOut, nil)
+		msgOut, selectEvent)
 
 	_ = &Layout{
 		userCur:         0,
