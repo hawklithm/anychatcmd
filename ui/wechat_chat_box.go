@@ -79,6 +79,14 @@ func (l *ChatBox) showDetail() {
 
 }
 
+func (l *ChatBox) appendToConversationBox(msg wechat.MessageRecord) {
+	item := widgets.NewImageListItem()
+	item.Url = msg.Url
+	item.Img = msg.ContentImg
+	item.Text = msg.Text
+	l.conversationBox.Rows = append(l.conversationBox.Rows, item)
+}
+
 func (l *ChatBox) NextSelect() {
 	l.conversationBox.ScrollDown()
 	termui.Render(l.conversationBox)
@@ -175,6 +183,7 @@ func (l *ChatBox) apendChatLogOut(msg wechat.MessageRecord) *wechat.MessageRecor
 	}
 
 	l.userChatLog[msg.To].record = append(l.userChatLog[msg.To].record, msg)
+	l.appendToConversationBox(msg)
 
 	return &msg
 }
@@ -185,6 +194,7 @@ func (l *ChatBox) apendChatLogIn(msg wechat.MessageRecord) *wechat.MessageRecord
 	}
 
 	l.userChatLog[msg.From].record = append(l.userChatLog[msg.From].record, msg)
+	l.appendToConversationBox(msg)
 
 	return &msg
 

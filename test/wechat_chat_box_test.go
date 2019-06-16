@@ -34,7 +34,7 @@ func Test_chat_box(t *testing.T) {
 	msgOut := make(chan wechat.MessageRecord)
 	groupChan := make(chan ui.Group)
 
-	chatBox := ui.NewChatBox(0, 0, 40, 40, logger, msgIn, msgOut, groupChan)
+	chatBox := ui.NewChatBox(0, 0, 100, 40, logger, msgIn, msgOut, groupChan)
 
 	chatBox.Pick()
 
@@ -46,6 +46,10 @@ func Test_chat_box(t *testing.T) {
 
 	msgIn <- wechat.Message{FromUserName: "12345678", Content: "123125125",
 		MsgType: 1, MsgId: "123124124", ToUserName: "87654321"}
+
+	msgIn <- wechat.Message{FromUserName: "12345678",
+		Content: "absdfasdflkasgjdklajl",
+		MsgType: 1, MsgId: "123124125", ToUserName: "87654321"}
 
 	uiEvents := termui.PollEvents()
 
