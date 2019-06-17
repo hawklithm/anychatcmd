@@ -270,6 +270,10 @@ func NewUserList(recentUserList []UserInfo, recentGroupList []Group, userList []
 
 }
 
+func (l *UserList) InvokeSelect() {
+	l.refreshCurrentSelect()
+}
+
 func (l *UserList) nextUser() {
 	l.currentTab.ScrollDown()
 	l.refreshCurrentSelect()

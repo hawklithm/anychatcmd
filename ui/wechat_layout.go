@@ -45,7 +45,23 @@ type Layout struct {
 	groupMemberMap  map[string]map[string]string
 	imageMap        map[string]image.Image
 	msgIdList       map[string][]string
-	selectedMsgId   string
+	pickerList      []WidgetPicker
+
+	curWidget int
+}
+
+func (l *Layout) SwitchWidget() {
+	l.curWidget++
+	if l.curWidget >= len(l.pickerList) {
+		l.curWidget = 0
+	}
+	for i, p := range l.pickerList {
+		if i == l.curWidget {
+			p.Pick()
+		} else {
+			p.Unpick()
+		}
+	}
 }
 
 type WidgetPicker interface {
@@ -89,7 +105,9 @@ func NewLayout(
 
 	pickerList = append(pickerList, chatBox)
 
-	_ = &Layout{
+	userListWidget.InvokeSelect()
+
+	l := &Layout{
 		userCur:         0,
 		curPage:         0,
 		chatBox:         chatBox,
@@ -105,7 +123,9 @@ func NewLayout(
 		imageMap:        imageMap,
 		msgIdList:       make(map[string][]string),
 		Notify:          true,
+		pickerList:      pickerList,
 	}
+	l.SwitchWidget()
 
 	uiEvents := ui.PollEvents()
 	for {
