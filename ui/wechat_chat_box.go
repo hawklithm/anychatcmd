@@ -106,6 +106,9 @@ func (l *ChatBox) PrevSelect() {
 }
 
 func (l *ChatBox) Action(e termui.Event) bool {
+	if !l.picked {
+		return false
+	}
 	switch e.ID {
 	case "<Enter>":
 		if l.editBox.Text != "" {
@@ -182,7 +185,9 @@ func (l *ChatBox) apendChatLogOut(msg wechat.MessageRecord) *wechat.MessageRecor
 	}
 
 	l.userChatLog[msg.To].record = append(l.userChatLog[msg.To].record, msg)
-	l.appendToConversationBox(msg)
+	if msg.To == l.Id {
+		l.appendToConversationBox(msg)
+	}
 
 	return &msg
 }
@@ -193,7 +198,9 @@ func (l *ChatBox) apendChatLogIn(msg wechat.MessageRecord) *wechat.MessageRecord
 	}
 
 	l.userChatLog[msg.From].record = append(l.userChatLog[msg.From].record, msg)
-	l.appendToConversationBox(msg)
+	if msg.From == l.Id {
+		l.appendToConversationBox(msg)
+	}
 
 	return &msg
 
@@ -233,6 +240,30 @@ func (l *ChatBox) displayMsgIn() {
 	return
 }
 
+func (l *ChatBox) resetRows() {
+	var rows []*widgets.ImageListItem
+	record := l.userChatLog[l.Id]
+	if record != nil && record.record != nil {
+		for _, i := range record.record {
+			item := widgets.NewImageListItem()
+			if i.ContentImg != nil {
+				item.Img = i.ContentImg
+			} else if i.Url != "" {
+				item.Url = i.Url
+				item.Text = i.From + "->" + i.To + ": " + i.Text
+			} else {
+				item.Text = i.From + "->" + i.To + ": " + i.Text
+			}
+			rows = append(rows, item)
+		}
+	}
+	l.conversationBox.Rows = rows
+	l.conversationBox.SelectedRow = len(l.conversationBox.Rows) - 1
+	if l.conversationBox.SelectedRow < 0 {
+		l.conversationBox.SelectedRow = 0
+	}
+}
+
 func NewChatBox(baseX, baseY, width, height int, logger *log.Logger,
 	msgIn chan wechat.Message, msgOut chan wechat.MessageRecord,
 	groupChan chan SelectEvent) *ChatBox {
@@ -252,6 +283,7 @@ func NewChatBox(baseX, baseY, width, height int, logger *log.Logger,
 	go func() {
 		for {
 			group := <-c.groupChan
+			logger.Println("select event come", group)
 			c.Id = group.GetId()
 			c.name = group.GetName()
 			c.memberList = group.GetUserList()
@@ -259,6 +291,7 @@ func NewChatBox(baseX, baseY, width, height int, logger *log.Logger,
 			for _, user := range c.memberList {
 				c.memberListMap[user.UserId] = user
 			}
+			c.resetRows()
 			termui.Render(c.conversationBox)
 		}
 	}()

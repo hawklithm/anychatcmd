@@ -139,6 +139,7 @@ func (this *UserList) renderTab() {
 
 func (this *UserList) refreshCurrentSelect() {
 	this.curUserIndex = this.currentTab.SelectedRow
+	this.logger.Println("user change to", this.curUserIndex)
 	if this.selectEvent != nil {
 		this.selectEvent <- (*this.currentList)[this.curUserIndex]
 	} else {

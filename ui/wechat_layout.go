@@ -130,6 +130,11 @@ func NewLayout(
 	uiEvents := ui.PollEvents()
 	for {
 		e := <-uiEvents
+		switch e.ID {
+		case "<C-w>":
+			l.SwitchWidget()
+			continue
+		}
 		catched := false
 		for _, picker := range pickerList {
 			if picker.Action(e) {
@@ -148,27 +153,6 @@ func NewLayout(
 	}
 
 }
-
-//func setRows(p *widgets.ImageList, records []*wechat.MessageRecord) {
-//	var rows []*widgets.ImageListItem
-//	for _, i := range records {
-//		item := widgets.NewImageListItem()
-//		if i.ContentImg != nil {
-//			item.Img = i.ContentImg
-//		} else if i.Url != "" {
-//			item.Url = i.Url
-//			item.Text = i.From + "->" + i.To + ": " + i.Content
-//		} else {
-//			item.Text = i.From + "->" + i.To + ": " + i.Content
-//		}
-//		rows = append(rows, item)
-//	}
-//	p.Rows = rows
-//	p.SelectedRow = len(p.Rows) - 1
-//	if p.SelectedRow < 0 {
-//		p.SelectedRow = 0
-//	}
-//}
 
 var commands = map[string]string{
 	"darwin": "open",
