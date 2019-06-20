@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"github.com/hawklithm/anychatcmd/utils"
 	"github.com/hawklithm/anychatcmd/wechat"
 	"github.com/hawklithm/termui"
 	"github.com/hawklithm/termui/widgets"
@@ -90,7 +91,13 @@ func (l *ChatBox) appendToConversationBox(msg wechat.MessageRecord) {
 	item := widgets.NewImageListItem()
 	item.Url = msg.Url
 	item.Img = msg.ContentImg
-	item.Text = msg.Text
+	if l.memberListMap[msg.Speaker] != nil {
+		member := l.memberListMap[msg.Speaker]
+		item.Text = utils.If(member.DisplayName != "", member.DisplayName,
+			member.Nick).(string) + "->" + msg.Text
+	} else {
+		item.Text = "->" + msg.Text
+	}
 	l.conversationBox.Rows = append(l.conversationBox.Rows, item)
 	termui.Render(l.conversationBox)
 }
@@ -246,13 +253,19 @@ func (l *ChatBox) resetRows() {
 	if record != nil && record.record != nil {
 		for _, i := range record.record {
 			item := widgets.NewImageListItem()
+			var from string
+			l.logger.Println("speaker =", i.Speaker)
+			if l.memberListMap[i.Speaker] != nil {
+				p := l.memberListMap[i.Speaker]
+				from = utils.If(p.DisplayName != "", p.DisplayName, p.Nick).(string)
+			}
 			if i.ContentImg != nil {
 				item.Img = i.ContentImg
 			} else if i.Url != "" {
 				item.Url = i.Url
-				item.Text = i.From + "->" + i.To + ": " + i.Text
+				item.Text = from + "->" + i.Text
 			} else {
-				item.Text = i.From + "->" + i.To + ": " + i.Text
+				item.Text = from + "->" + i.Text
 			}
 			rows = append(rows, item)
 		}
@@ -290,6 +303,7 @@ func NewChatBox(baseX, baseY, width, height int, logger *log.Logger,
 			c.memberListMap = make(map[string]*UserInfo)
 			for _, user := range c.memberList {
 				c.memberListMap[user.UserId] = user
+				logger.Println("member id=", user.GetId())
 			}
 			c.resetRows()
 			termui.Render(c.conversationBox)

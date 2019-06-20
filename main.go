@@ -99,13 +99,13 @@ func main() {
 	}
 
 	var recentUserList []ui.UserInfo
-	var recentGroupList []ui.Group
+	var recentGroupList []*ui.Group
 	var userInfos []ui.UserInfo
-	var groupInfos []ui.Group
+	var groupInfos []*ui.Group
 
 	for _, member := range wechat.InitContactList {
 		if strings.HasPrefix(member.UserName, "@@") {
-			recentGroupList = append(recentGroupList, ui.Group{GroupId: member.
+			recentGroupList = append(recentGroupList, &ui.Group{GroupId: member.
 				UserName, Name: member.NickName,
 				LastChatTime: time.Now()})
 		} else {
@@ -128,7 +128,7 @@ func main() {
 	}
 
 	for _, member := range wechat.GroupMemberList {
-		groupInfos = append(groupInfos, ui.Group{GroupId: member.
+		groupInfos = append(groupInfos, &ui.Group{GroupId: member.
 			UserName, Name: member.NickName,
 			LastChatTime: time.Now()})
 	}
@@ -146,6 +146,8 @@ func main() {
 	//	return
 	//}
 
+	ui.InitTalkInfo(wechat, logger, groupInfos)
+
 	msgIn := make(chan chat.Message, maxChanSize)
 	msgOut := make(chan chat.MessageRecord, maxChanSize)
 	selectEvent := make(chan ui.SelectEvent, maxChanSize)
@@ -155,15 +157,15 @@ func main() {
 
 	go wechat.MsgDaemon(msgOut, autoChan)
 
-	logger.Println("recentUserList size=", len(recentUserList))
-	logger.Println("recentGroupList size=", len(recentGroupList))
-	logger.Println("userInfos size=", len(userInfos))
-	logger.Println("groupInfos size=", len(groupInfos))
+	//logger.Println("recentUserList size=", len(recentUserList))
+	//logger.Println("recentGroupList size=", len(recentGroupList))
+	//logger.Println("userInfos size=", len(userInfos))
+	//logger.Println("groupInfos size=", len(groupInfos))
 
 	ui.NewLayout(recentUserList, recentGroupList, userInfos, groupInfos,
 		nil, selectEvent,
 		wechat.User.NickName,
 		wechat.User.UserName, msgIn, msgOut,
-		wxLogger)
+		wxLogger, wechat)
 
 }

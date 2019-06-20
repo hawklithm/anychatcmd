@@ -71,12 +71,12 @@ type WidgetPicker interface {
 }
 
 func NewLayout(
-	recentUserList []UserInfo, recentGroupList []Group, userList []UserInfo,
-	groupList []Group, userChangeEvent chan UserChangeEvent,
+	recentUserList []UserInfo, recentGroupList []*Group, userList []UserInfo,
+	groupList []*Group, userChangeEvent chan UserChangeEvent,
 	selectEvent chan SelectEvent,
 	myName, myID string,
 	msgIn chan wechat.Message, msgOut chan wechat.MessageRecord,
-	logger *log.Logger) {
+	logger *log.Logger, we *wechat.Wechat) {
 
 	//	chinese := false
 	err := ui.Init()
@@ -95,7 +95,7 @@ func NewLayout(
 	var pickerList []WidgetPicker
 
 	userListWidget := NewUserList(recentUserList, recentGroupList, userList,
-		groupList, selectEvent, width*2/10, height, 0, 0, logger)
+		groupList, selectEvent, width*2/10, height, 0, 0, logger, we)
 	userListWidget.Pick()
 
 	pickerList = append(pickerList, userListWidget)

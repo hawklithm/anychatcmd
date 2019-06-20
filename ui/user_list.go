@@ -2,9 +2,11 @@ package ui
 
 import (
 	"github.com/hawklithm/anychatcmd/utils"
+	"github.com/hawklithm/anychatcmd/wechat"
 	ui "github.com/hawklithm/termui"
 	"github.com/hawklithm/termui/widgets"
 	"log"
+	"strings"
 	"time"
 )
 
@@ -17,10 +19,11 @@ type UserList struct {
 	width           int
 	height          int
 	recentUserList  []UserInfo
-	recentGroupList []Group
+	recentGroupList []*Group
 	userList        *SortItems
 	groupList       *SortItems
 	selectEvent     chan SelectEvent
+	we              *wechat.Wechat
 
 	tabPane          *widgets.TabPane
 	userNickListBox  *widgets.List
@@ -116,7 +119,7 @@ func (p SortItems) Less(i, j int) bool {
 	return p[i].GetLastChatTime().After(p[j].GetLastChatTime())
 }
 
-func merge(userInfo []UserInfo, groupInfo []Group) *SortItems {
+func merge(userInfo []UserInfo, groupInfo []*Group) *SortItems {
 	z := make(SortItems, len(userInfo)+len(groupInfo))
 	var count = 0
 	for _, user := range userInfo {
@@ -137,11 +140,56 @@ func (this *UserList) renderTab() {
 	ui.Render(this.tabPane, this.currentTab)
 }
 
+func InitTalkInfo(w *wechat.Wechat, logger *log.Logger, groups []*Group) {
+	var groupIds []string
+	groupMap := make(map[string]*Group)
+	for _, group := range groups {
+		groupIds = append(groupIds, group.GroupId)
+		groupMap[group.GroupId] = group
+	}
+	l := len(groupIds)
+	var end int
+	for index := 0; index < l; index += 50 {
+		end = index + 50
+		if end > l {
+			end = l
+		}
+		if members, err := w.GetContactsInBatch(groupIds[index:end]); err != nil {
+			logger.Println("init contact error!", err)
+		} else {
+			if members != nil && len(members) > 0 {
+				for _, member := range members {
+					groupMap[member.UserName].
+						UserList = convertMemeberToUserInfo(member.MemberList)
+				}
+
+			}
+		}
+	}
+}
+
+func convertMemeberToUserInfo(users []wechat.User) []*UserInfo {
+	var userInfos []*UserInfo
+	if users == nil || len(users) == 0 {
+		return userInfos
+	}
+	for _, u := range users {
+		userInfos = append(userInfos, &UserInfo{
+			UserId:      u.UserName,
+			Nick:        u.NickName,
+			DisplayName: u.RemarkName})
+	}
+	return userInfos
+}
+
 func (this *UserList) refreshCurrentSelect() {
 	this.curUserIndex = this.currentTab.SelectedRow
-	this.logger.Println("user change to", this.curUserIndex)
 	if this.selectEvent != nil {
-		this.selectEvent <- (*this.currentList)[this.curUserIndex]
+		u := (*this.currentList)[this.curUserIndex]
+		if strings.HasPrefix(u.GetId(), "@@") && len(u.GetUserList()) == 0 {
+			InitTalkInfo(this.we, this.logger, []*Group{u.(*Group)})
+		}
+		this.selectEvent <- u
 	} else {
 		this.logger.Println("warning!", "no select event channel set!")
 	}
@@ -233,7 +281,7 @@ func convertUsersToSortItems(users []UserInfo) *SortItems {
 	return &z
 }
 
-func convertGroupsToSortItems(groups []Group) *SortItems {
+func convertGroupsToSortItems(groups []*Group) *SortItems {
 	z := make(SortItems, len(groups))
 	for i, user := range groups {
 		z[i] = user
@@ -241,12 +289,13 @@ func convertGroupsToSortItems(groups []Group) *SortItems {
 	return &z
 }
 
-func NewUserList(recentUserList []UserInfo, recentGroupList []Group, userList []UserInfo,
-	groupList []Group,
+func NewUserList(recentUserList []UserInfo, recentGroupList []*Group,
+	userList []UserInfo,
+	groupList []*Group,
 	selectEvent chan SelectEvent, width,
 	height,
 	baseX, baseY int,
-	logger *log.Logger) *UserList {
+	logger *log.Logger, we *wechat.Wechat) *UserList {
 
 	//	chinese := false
 	convertUsersToSortItems(userList)
@@ -263,6 +312,7 @@ func NewUserList(recentUserList []UserInfo, recentGroupList []Group, userList []
 		userList:        convertUsersToSortItems(userList),
 		groupList:       convertGroupsToSortItems(groupList),
 		selectEvent:     selectEvent,
+		we:              we,
 	}
 
 	l.Reset()
