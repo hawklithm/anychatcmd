@@ -39,10 +39,6 @@ type MessageRecord struct {
 	Url        string
 }
 
-func (m *MessageRecord) String() string {
-	return m.From + "->" + m.To + ": " + m.Text
-}
-
 type Message struct {
 	FromUserName         string
 	PlayLength           int

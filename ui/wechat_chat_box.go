@@ -95,6 +95,8 @@ func (l *ChatBox) appendToConversationBox(msg wechat.MessageRecord) {
 		member := l.memberListMap[msg.Speaker]
 		item.Text = utils.If(member.DisplayName != "", member.DisplayName,
 			member.Nick).(string) + "->" + msg.Text
+	} else if msg.Speaker == l.MyId {
+		item.Text = "我->" + msg.Text
 	} else {
 		item.Text = "->" + msg.Text
 	}
@@ -183,7 +185,7 @@ func getSpeakerIdAndContent(content string) (string, string) {
 	if len(t) <= 0 {
 		return "", s
 	}
-	return t, s[idx+1:]
+	return t, s[idx+6:]
 }
 
 func (l *ChatBox) apendChatLogOut(msg wechat.MessageRecord) *wechat.MessageRecord {
@@ -231,7 +233,12 @@ func (l *ChatBox) displayMsgIn() {
 					From: msg.FromUserName, Speaker: l.MyId,
 					MsgId: msg.MsgId})
 			} else {
-				speaker, content := getSpeakerIdAndContent(msg.Content)
+				var speaker, content string
+				if msg.FromUserName[:2] == "@@" {
+					speaker, content = getSpeakerIdAndContent(msg.Content)
+				} else {
+					speaker, content = msg.FromUserName, msg.Content
+				}
 				newMsg = l.apendChatLogIn(wechat.MessageRecord{To: msg.
 					ToUserName,
 					Text: content,
@@ -239,7 +246,7 @@ func (l *ChatBox) displayMsgIn() {
 					MsgId: msg.MsgId})
 			}
 
-			l.logger.Println("message receive = ", newMsg.String())
+			l.logger.Println("message receive = ", newMsg)
 
 		}
 
@@ -254,8 +261,9 @@ func (l *ChatBox) resetRows() {
 		for _, i := range record.record {
 			item := widgets.NewImageListItem()
 			var from string
-			l.logger.Println("speaker =", i.Speaker)
-			if l.memberListMap[i.Speaker] != nil {
+			if i.Speaker == l.MyId {
+				from = "我"
+			} else if l.memberListMap[i.Speaker] != nil {
 				p := l.memberListMap[i.Speaker]
 				from = utils.If(p.DisplayName != "", p.DisplayName, p.Nick).(string)
 			}
@@ -277,7 +285,8 @@ func (l *ChatBox) resetRows() {
 	}
 }
 
-func NewChatBox(baseX, baseY, width, height int, logger *log.Logger,
+func NewChatBox(myId, myName string, baseX, baseY, width, height int,
+	logger *log.Logger,
 	msgIn chan wechat.Message, msgOut chan wechat.MessageRecord,
 	groupChan chan SelectEvent) *ChatBox {
 
@@ -290,20 +299,20 @@ func NewChatBox(baseX, baseY, width, height int, logger *log.Logger,
 		messageIn: msgIn,
 		msgOut:    msgOut,
 		groupChan: groupChan,
+		MyId:      myId,
+		MyName:    myName,
 	}
 	go c.displayMsgIn()
 	c.Reset()
 	go func() {
 		for {
 			group := <-c.groupChan
-			logger.Println("select event come", group)
 			c.Id = group.GetId()
 			c.name = group.GetName()
 			c.memberList = group.GetUserList()
 			c.memberListMap = make(map[string]*UserInfo)
 			for _, user := range c.memberList {
 				c.memberListMap[user.UserId] = user
-				logger.Println("member id=", user.GetId())
 			}
 			c.resetRows()
 			termui.Render(c.conversationBox)

@@ -100,7 +100,9 @@ func NewLayout(
 
 	pickerList = append(pickerList, userListWidget)
 
-	chatBox := NewChatBox(width*2/10, 0, width*8/10, height, logger, msgIn,
+	chatBox := NewChatBox(myID, myName, width*2/10, 0, width*8/10, height,
+		logger,
+		msgIn,
 		msgOut, selectEvent)
 
 	pickerList = append(pickerList, chatBox)
@@ -356,24 +358,6 @@ func appendToPar(p *widgets.Paragraph, k string) {
 		p.Text = strings.Join(subText[len(subText)-20:], "\n")
 	}
 	p.Text += k
-	ui.Render(p)
-}
-
-func appendToList(p *widgets.ImageList, k *wechat.MessageRecord) {
-	item := widgets.NewImageListItem()
-	item.Text = k.String()
-	if k.Url != "" {
-		item.Url = k.Url
-	}
-	p.Rows = append(p.Rows, item)
-	ui.Render(p)
-}
-
-func appendImageToList(p *widgets.ImageList, k image.Image) {
-	item := widgets.NewImageListItem()
-	item.WrapText = true
-	item.Img = k
-	p.Rows = append(p.Rows, item)
 	ui.Render(p)
 }
 

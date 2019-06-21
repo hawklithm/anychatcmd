@@ -282,19 +282,19 @@ func (w *Wechat) SyncDaemon(msgIn chan Message) {
 					switch msg.MsgType {
 					case 1:
 
-						if msg.FromUserName[:2] == "@@" {
-							//群消息
-							if msg.FromUserNickName == "" {
-								contentSlice := strings.Split(msg.Content, ":<br/>")
-								msg.Content = contentSlice[1]
-
-							}
-						} else {
-							//if w.AutoReply {
-							//	w.SendMsg(msg.FromUserName, w.AutoReplyMsg(), false)
-							//}
-						}
-						w.convertMsg(&msg)
+						//if msg.FromUserName[:2] == "@@" {
+						//	//群消息
+						//	if msg.FromUserNickName == "" {
+						//		contentSlice := strings.Split(msg.Content, ":<br/>")
+						//		msg.Content = contentSlice[1]
+						//
+						//	}
+						//} else {
+						//	//if w.AutoReply {
+						//	//	w.SendMsg(msg.FromUserName, w.AutoReplyMsg(), false)
+						//	//}
+						//}
+						//w.convertMsg(&msg)
 						msgIn <- msg
 
 					case 47:
