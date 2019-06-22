@@ -36,7 +36,6 @@ func (w *Wechat) GetContacts() (err error) {
 		w.MemberMap[member.UserName] = member
 		if member.UserName[:2] == "@@" {
 			w.GroupMemberList = append(w.GroupMemberList, member) //群聊
-			w.Log.Println("member info=", member)
 		} else if member.VerifyFlag&8 != 0 {
 			w.PublicUserList = append(w.PublicUserList, member) //公众号
 		} else if member.UserName[:1] == "@" {
@@ -212,7 +211,7 @@ func (w *Wechat) dealImageMessage(msg Message) *MessageRecord {
 			fromId = msg.ToUserName
 		}
 		return &MessageRecord{From: fromId, To: targetId, Text: "图片",
-			ContentImg: img,
+			ContentImg: &img,
 			MsgId:      msgId}
 	}
 }
@@ -281,22 +280,7 @@ func (w *Wechat) SyncDaemon(msgIn chan Message) {
 
 					switch msg.MsgType {
 					case 1:
-
-						//if msg.FromUserName[:2] == "@@" {
-						//	//群消息
-						//	if msg.FromUserNickName == "" {
-						//		contentSlice := strings.Split(msg.Content, ":<br/>")
-						//		msg.Content = contentSlice[1]
-						//
-						//	}
-						//} else {
-						//	//if w.AutoReply {
-						//	//	w.SendMsg(msg.FromUserName, w.AutoReplyMsg(), false)
-						//	//}
-						//}
-						//w.convertMsg(&msg)
 						msgIn <- msg
-
 					case 47:
 						if hasProductId == 1 {
 							msg.Content = "[收到了一个表情，请在手机上查看]"

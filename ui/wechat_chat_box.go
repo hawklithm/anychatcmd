@@ -78,7 +78,7 @@ func (l *ChatBox) showDetail() {
 		if err != nil {
 			l.logger.Fatalln("open file failed! path=", builder.String(), err)
 		}
-		if err := png.Encode(out, item.ContentImg); err != nil {
+		if err := png.Encode(out, *item.ContentImg); err != nil {
 			l.logger.Fatalln("encode image failed! path=", builder.String(), err)
 		} else {
 			_ = open.Start(builder.String())
@@ -231,7 +231,8 @@ func (l *ChatBox) displayMsgIn() {
 				newMsg = l.apendChatLogOut(wechat.MessageRecord{To: msg.
 					ToUserName, Text: msg.Content, Type: msg.MsgType,
 					From: msg.FromUserName, Speaker: l.MyId,
-					MsgId: msg.MsgId})
+					ContentImg: msg.Img,
+					MsgId:      msg.MsgId})
 			} else {
 				var speaker, content string
 				if msg.FromUserName[:2] == "@@" {
@@ -241,7 +242,7 @@ func (l *ChatBox) displayMsgIn() {
 				}
 				newMsg = l.apendChatLogIn(wechat.MessageRecord{To: msg.
 					ToUserName,
-					Text: content,
+					Text: content, ContentImg: msg.Img,
 					Type: msg.MsgType, From: msg.FromUserName, Speaker: speaker,
 					MsgId: msg.MsgId})
 			}

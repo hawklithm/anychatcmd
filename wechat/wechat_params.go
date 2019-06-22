@@ -34,7 +34,7 @@ type MessageRecord struct {
 	Text       string
 	Speaker    string
 	MsgId      string
-	ContentImg image.Image
+	ContentImg *image.Image
 	Type       int
 	Url        string
 }
@@ -348,6 +348,6 @@ func NewImageMessageRecordIn(message MessageImage) *MessageRecord {
 		To:         message.ToUserName,
 		Text:       message.Content,
 		Type:       message.MsgType,
-		ContentImg: message.Img,
+		ContentImg: &message.Img,
 	}
 }
