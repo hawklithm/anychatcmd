@@ -24,6 +24,7 @@ go build
     
     效果图：
     
+    ![test](https://github.com/hawklithm/anychatcmd/blob/master/test/test.png?raw=true)
     
 
 
