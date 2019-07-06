@@ -1,5 +1,34 @@
 # anychatcmd  [![star this repo](http://github-svg-buttons.herokuapp.com/star.svg?user=hawklithm&repo=anychatcmd&style=flat&background=1081C1)](http://github.com/hawklithm/anychatcmd) [![fork this repo](http://github-svg-buttons.herokuapp.com/fork.svg?user=hawklithm&repo=anychatcmd&style=flat&background=1081C1)](http://github.com/hawklithm/anychatcmd/fork) ![Build](https://camo.githubusercontent.com/46cb8b3469febc6cdb6fbaea2ef1517c396004e7/68747470733a2f2f7472617669732d63692e6f72672f736a77686974776f7274682f676f6c6561726e2e706e673f6272616e63683d6d6173746572)
 
+## INSTALL
+
+```bash
+git clone https://github.com/hawklithm/anychatcmd.git
+cd anychatcmd
+dep ensure -update -v
+go build
+./anychatcmd  #启动anychatcmd
+```
+
+## 最新资讯
+
+1. 代码重构基本完成
+
+2. 基于iterm协议实现了命令行图片展示
+    
+    目前仅支持iterm，xterm未验证，后续会移植linux版本
+    
+    使用方法：
+    
+    在执行```./anychatcmd```之前执行 ```export WECHAT_TERM=iterm```
+    
+    效果图：
+    
+    
+
+
+## 背景
+
 最初考虑做pc版微信替代品的出发点是公司安全方面原因，(公司出于安全性考虑不允许安装pc版wechat，网页版在使用上并不令人满意)
 ，但是后来在做的过程中发现，不止可以尝试微信cmd版，还可以尝试一些其他软件的cmd版(个人无聊爱好)
 
@@ -59,16 +88,3 @@
 - [ ] 支持Boss直聘网页版及一些自动化功能(纯工作需要.....)
 
 
-### Mac安装
-
-	$ go get -u github.com/hawklithm/anychatcmd
-
-
-### Linux安装
-
-	$ go get -u github.com/hawklithm/anychatcmd
-
-
-### 使用
-
-	$ ./anychatcmd

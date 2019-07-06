@@ -19,10 +19,6 @@ func Test_UI(t *testing.T) {
 	//log.SetLevel(log.DebugLevel)
 	msgIn := make(chan wechat.Message, maxChanSize)
 	textOut := make(chan wechat.MessageRecord, maxChanSize)
-	imageIn := make(chan wechat.MessageImage, maxChanSize)
-
-	closeChan := make(chan int, 1)
-	autoChan := make(chan int, 1)
 
 	fileName := "log.txt"
 	var logFile *os.File
@@ -51,14 +47,14 @@ func Test_UI(t *testing.T) {
 			LastChatTime: time.Now()},
 	}
 
-	groupArray := []ui.Group{
+	groupArray := []*ui.Group{
 		{GroupId: "12312126", Name: "TestGroup1",
 			LastChatTime: time.Now()},
 		{GroupId: "12312127", Name: "TestGroup2",
 			LastChatTime: time.Now()},
 	}
 
-	rgroupArray := []ui.Group{
+	rgroupArray := []*ui.Group{
 		{GroupId: "12312130", Name: "TestGroup3",
 			LastChatTime: time.Now()},
 		{GroupId: "12312131", Name: "TestGroup4",
@@ -78,7 +74,7 @@ func Test_UI(t *testing.T) {
 	ui.NewLayout(ruserInfoArray, rgroupArray, userInfoArray, groupArray,
 		userChangeEvent, selectEvent,
 		"test1", "test2",
-		msgIn, textOut, autoChan, wxLogger)
+		msgIn, textOut, wxLogger, nil)
 }
 
 func Test_NOTIFY(t *testing.T) {

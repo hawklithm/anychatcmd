@@ -29,14 +29,14 @@ func Test_UserList(t *testing.T) {
 			LastChatTime: time.Now()},
 	}
 
-	groupArray := []ui.Group{
+	groupArray := []*ui.Group{
 		{GroupId: "12312126", Name: "TestGroup1",
 			LastChatTime: time.Now()},
 		{GroupId: "12312127", Name: "TestGroup2",
 			LastChatTime: time.Now()},
 	}
 
-	rgroupArray := []ui.Group{
+	rgroupArray := []*ui.Group{
 		{GroupId: "12312130", Name: "TestGroup3",
 			LastChatTime: time.Now()},
 		{GroupId: "12312131", Name: "TestGroup4",
@@ -62,7 +62,7 @@ func Test_UserList(t *testing.T) {
 
 	userList := ui.NewUserList(ruserInfoArray, rgroupArray, userInfoArray,
 		groupArray,
-		nil, 40, 40, 0, 0, logger)
+		nil, 40, 40, 0, 0, logger, nil)
 
 	userList.Pick()
 

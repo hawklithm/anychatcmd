@@ -19,14 +19,30 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:e70bd084c23e8151719ffa7475eded89ea11bf3763a6ad2c907958a3d001c993"
+  digest = "1:b9a8abe3242bbe88683888fc82897af926373b5af8668a5fcf11f6641cf4f4ef"
+  name = "github.com/hawklithm/termbox-go"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "19456171586128fa539f6ab91e40d7a5e5511120"
+
+[[projects]]
+  branch = "master"
+  digest = "1:a8013b9d9ce62e4da26d2b21056d12f672981b022a077f427a0bb357763207e0"
   name = "github.com/hawklithm/termui"
   packages = [
     ".",
     "widgets",
   ]
   pruneopts = "UT"
-  revision = "e5106adc5d53e593203f7252ff0ed262afe26ef2"
+  revision = "4ff4300379846f7a0b445b078bc9d936e72c74ba"
+
+[[projects]]
+  branch = "master"
+  digest = "1:a70ce56468ce501eb078a39b8fb6878435d38b6874b6b40476b85b336808021f"
+  name = "github.com/martinlindhe/imgcat"
+  packages = ["lib"]
+  pruneopts = "UT"
+  revision = "faa120996cdb3464fcc0615a26e78f2833cf24d2"
 
 [[projects]]
   digest = "1:0356f3312c9bd1cbeda81505b7fd437501d8e778ab66998ef69f00d7f9b3a0d7"
@@ -46,14 +62,6 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:e4f1b6b3c33388b1f6f3d630280d9b0870c1e2f80379dfd2f89dd06425e9e6b9"
-  name = "github.com/nsf/termbox-go"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "288510b9734e30e7966ec2f22b87c5f8e67345e3"
-
-[[projects]]
-  branch = "master"
   digest = "1:519621a373ae7d96a16415a6356d7b97722ed3a292f73409b361b7c0322971e3"
   name = "github.com/skratchdot/open-golang"
   packages = ["open"]
@@ -67,6 +75,7 @@
     "github.com/daviddengcn/go-colortext",
     "github.com/hawklithm/termui",
     "github.com/hawklithm/termui/widgets",
+    "github.com/martinlindhe/imgcat/lib",
     "github.com/skratchdot/open-golang/open",
   ]
   solver-name = "gps-cdcl"

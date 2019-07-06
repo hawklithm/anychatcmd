@@ -90,7 +90,9 @@ func (l *ChatBox) showDetail() {
 func (l *ChatBox) appendToConversationBox(msg wechat.MessageRecord) {
 	item := widgets.NewImageListItem()
 	item.Url = msg.Url
-	item.Img = msg.ContentImg
+	if msg.ContentImg != nil {
+		item.SetImage(*msg.ContentImg)
+	}
 	if l.memberListMap[msg.Speaker] != nil {
 		member := l.memberListMap[msg.Speaker]
 		item.Text = utils.If(member.DisplayName != "", member.DisplayName,
@@ -269,7 +271,7 @@ func (l *ChatBox) resetRows() {
 				from = utils.If(p.DisplayName != "", p.DisplayName, p.Nick).(string)
 			}
 			if i.ContentImg != nil {
-				item.Img = i.ContentImg
+				item.SetImage(*i.ContentImg)
 			} else if i.Url != "" {
 				item.Url = i.Url
 				item.Text = from + "->" + i.Text
