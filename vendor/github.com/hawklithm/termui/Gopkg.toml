@@ -39,7 +39,7 @@
 
 [[constraint]]
   branch = "master"
-  name = "github.com/nsf/termbox-go"
+  name = "github.com/hawklithm/termbox-go"
 
 [prune]
   go-tests = true
