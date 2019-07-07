@@ -39,10 +39,14 @@ type UserList struct {
 
 func (this *UserList) Pick() {
 	this.picked = true
+	this.currentTab.BorderStyle = ui.NewStyle(ui.ColorRed)
+	ui.Render(this.currentTab)
 }
 
 func (this *UserList) Unpick() {
 	this.picked = false
+	this.currentTab.BorderStyle = ui.NewStyle(ui.ColorMagenta)
+	ui.Render(this.currentTab)
 }
 
 type UserChangeEvent struct {

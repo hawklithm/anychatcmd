@@ -48,10 +48,16 @@ type ChatLogRecord struct {
 
 func (l *ChatBox) Pick() {
 	l.picked = true
+	l.conversationBox.BorderStyle = termui.NewStyle(termui.ColorRed)
+	l.editBox.BorderStyle = termui.NewStyle(termui.ColorRed)
+	termui.Render(l.conversationBox, l.editBox)
 }
 
 func (l *ChatBox) Unpick() {
 	l.picked = false
+	l.conversationBox.BorderStyle = termui.NewStyle(termui.ColorMagenta)
+	l.editBox.BorderStyle = termui.NewStyle(termui.ColorMagenta)
+	termui.Render(l.conversationBox, l.editBox)
 }
 
 func (l *ChatBox) showDetail() {
@@ -93,14 +99,15 @@ func (l *ChatBox) appendToConversationBox(msg wechat.MessageRecord) {
 	if msg.ContentImg != nil {
 		item.SetImage(*msg.ContentImg)
 	}
+	item.Text = msg.Text
 	if l.memberListMap[msg.Speaker] != nil {
 		member := l.memberListMap[msg.Speaker]
-		item.Text = utils.If(member.DisplayName != "", member.DisplayName,
-			member.Nick).(string) + "->" + msg.Text
+		item.Title = utils.If(member.DisplayName != "", member.DisplayName,
+			member.Nick).(string)
 	} else if msg.Speaker == l.MyId {
-		item.Text = "我->" + msg.Text
+		item.Title = "我"
 	} else {
-		item.Text = "->" + msg.Text
+		item.Title = "unknow"
 	}
 	l.conversationBox.Rows = append(l.conversationBox.Rows, item)
 	termui.Render(l.conversationBox)
@@ -263,6 +270,7 @@ func (l *ChatBox) resetRows() {
 	if record != nil && record.record != nil {
 		for _, i := range record.record {
 			item := widgets.NewImageListItem()
+			item.Text = i.Text
 			var from string
 			if i.Speaker == l.MyId {
 				from = "我"
@@ -270,13 +278,11 @@ func (l *ChatBox) resetRows() {
 				p := l.memberListMap[i.Speaker]
 				from = utils.If(p.DisplayName != "", p.DisplayName, p.Nick).(string)
 			}
+			item.Title = from
 			if i.ContentImg != nil {
 				item.SetImage(*i.ContentImg)
 			} else if i.Url != "" {
 				item.Url = i.Url
-				item.Text = from + "->" + i.Text
-			} else {
-				item.Text = from + "->" + i.Text
 			}
 			rows = append(rows, item)
 		}

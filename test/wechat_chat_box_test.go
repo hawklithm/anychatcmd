@@ -5,9 +5,6 @@ import (
 	"github.com/hawklithm/anychatcmd/ui"
 	"github.com/hawklithm/anychatcmd/wechat"
 	"github.com/hawklithm/termui"
-	"github.com/martinlindhe/imgcat/lib"
-	"image"
-	"image/color"
 	"log"
 	"os"
 	"testing"
@@ -54,20 +51,6 @@ func Test_chat_box(t *testing.T) {
 	msgIn <- wechat.Message{FromUserName: "12345678",
 		Content: "absdfasdflkasgjdklajl",
 		MsgType: 1, MsgId: "123124125", ToUserName: "87654321"}
-
-	inFile := "/Users/hawky/Documents/test.png"
-
-	// using a io.Reader
-	f, _ := os.Open(inFile)
-	imgcat.Cat(f, os.Stdout)
-
-	// using filename
-	imgcat.CatFile(inFile, os.Stdout)
-
-	// using a image.Image
-	canvas := image.NewRGBA(image.Rect(0, 0, 20, 20))
-	canvas.Set(10, 10, image.NewUniform(color.RGBA{255, 255, 255, 255}))
-	imgcat.CatImage(canvas, os.Stdout)
 
 	uiEvents := termui.PollEvents()
 
